@@ -1,8 +1,6 @@
-@'
-This repository uses per-folder licensing:
+This repository contains multiple components with different licenses:
 
-- /lib — Apache-2.0 (see lib/LICENSE and lib/NOTICE)
-- /cli — MIT (see cli/LICENSE)
+- /lib  → Apache License 2.0 (see /lib/LICENSE and /lib/NOTICE)
+- /cli  → MIT License (see /cli/LICENSE)
 
-Canonical license texts are also kept in /LICENSES.
-'@ | Set-Content -NoNewline .\LICENSE
+Canonical texts are also stored under /LICENSES.
