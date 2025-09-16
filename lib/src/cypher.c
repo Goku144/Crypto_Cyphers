@@ -22,7 +22,11 @@
 
 /****************************** Math Functions ******************************/
 
-
+/*
+* Calculate the Greatest Common Divisor for a and b
+* a and b must be positive 
+*/
+uint64_t gcd(uint64_t a, uint64_t b);
 
 /***************************** Boolean Functions ****************************/
 

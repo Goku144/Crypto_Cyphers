@@ -23,8 +23,8 @@
 #define __CYPHER_KEYS__
 
 /****************************** Type Definition *****************************/
- 
-typedef struct String {char *str; size_t size} StringBuffer; 
+
+typedef struct String {char *str; size_t size;} StringBuffer; 
 
 /***************** 
  * START HELPERS *
@@ -32,7 +32,16 @@ typedef struct String {char *str; size_t size} StringBuffer;
 
 /****************************** Math Functions ******************************/
 
-
+uint64_t gcd(uint64_t a, uint64_t b)
+{
+    while (b)
+    {
+        uint64_t r = a % b;
+        a = b; // the next a
+        b = r; // the next b
+    }
+    return a;
+}
 
 /***************************** Boolean Functions ****************************/
 
