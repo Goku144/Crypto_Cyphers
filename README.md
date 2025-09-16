@@ -52,60 +52,46 @@ Open-source cryptography project with:
 ## Prerequisites
 
 * **Windows**: [MSYS2](https://www.msys2.org) (MinGW-w64), `make`, GCC toolchain
-* **Linux**: GCC, `make`
 
 ---
 
-## Building
+## Build & Install (Windows / MSYS2)
 
-### Windows (MSYS2 MinGW-w64)
+### Requirements
+- **MSYS2** installed: <https://www.msys2.org>
+- **Add MSYS2 to your system PATH**: include `C:\msys64\mingw64\bin`
 
-1. Open **MSYS2 MinGW x64** shell and install toolchain:
-
-   ```bash
-   pacman -Syu --noconfirm
-   pacman -S --needed --noconfirm mingw-w64-x86_64-toolchain make
-   ```
-
-2. Build the **library**:
-
-   ```bash
-   cd /d/CYPHER/lib
-   make                 # produces DLL/import lib or static lib per Makefile
-   ```
-
-3. Build the **CLI**:
-
-   ```bash
-   cd /d/CYPHER/CLI
-   make                 # produces .\src\bin\cypher.exe
-   ```
-
-4. Ensure the runtime can find GCC/Mingw DLLs:
-
-   * Add `C:\msys64\mingw64\bin` to your **User PATH**, or run the CLI from the *MinGW x64* shell.
-
-> If your Makefiles place outputs elsewhere, adjust paths accordingly.
-
-### Linux (GCC/Make)
-
+### Install MSYS2 toolchain
+Open **MSYS2 MinGW x64** shell and run:
 ```bash
-sudo apt-get update
-sudo apt-get install -y build-essential make
-cd lib && make
-cd ../CLI && make
+pacman -Syu --noconfirm
+pacman -S --needed --noconfirm mingw-w64-x86_64-toolchain make
+````
+
+> Quick PATH add (PowerShell):
+> ```powershell
+> [Environment]::SetEnvironmentVariable(
+>   "PATH",
+>   $env:PATH + ";C:\msys64\mingw64\bin",
+>   "User"
+> )
+> ```
+
+
+### Install this program
+
+From the repo root (`Crypto_Cyphers`), run:
+
+```bat
+.\install.bat
 ```
 
----
+### Run
 
-## Usage
+Open a new terminal, then:
 
 ```powershell
-# Windows PowerShell (after building)
-.\CLI\src\bin\cypher.exe --help
-
-# examples will be added as algorithms land:
-# .\CLI\src\bin\cypher.exe caesar --key 3 --in msg.txt --out enc.txt
+cypher --help
 ```
 
 Library (example skeleton):
