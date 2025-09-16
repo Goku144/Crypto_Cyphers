@@ -9,7 +9,7 @@
 int main(int argc, const char *argv[]) {
     if (argc != 3) {
         // TODO: check version and help
-        fprintf(stderr, "usage: %s <a> <b>\n", argv[0]);
+        fprintf(stderr, "usage: cypher <a> <b>\n");
         return 1;
     }
     char *end;
