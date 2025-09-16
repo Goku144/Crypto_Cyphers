@@ -91,7 +91,7 @@ From the repo root (`Crypto_Cyphers`), run:
 Open a new terminal, then:
 
 ```powershell
-cypher --help
+cypher --version
 ```
 
 Library (example skeleton):

@@ -5,11 +5,10 @@
 #include <stdio.h>
 #include <string.h>
 #include <cypher.h>
-#include "main.h"
 
 int main(int argc, const char *argv[]) {
     if (argc != 3) {
-        
+        // TODO: check version and help
         fprintf(stderr, "usage: %s <a> <b>\n", argv[0]);
         return 1;
     }
