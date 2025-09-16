@@ -14,17 +14,14 @@
  * limitations under the License.
  */
 
+
 #include <stdio.h>
-#include <stdbool.h>
+#include <ctype.h>
 #include <stdint.h>
 #include <stdlib.h>
 
 #if !defined(__CYPHER_KEYS__)
 #define __CYPHER_KEYS__
-
-/****************************** Type Definition *****************************/
- 
-typedef struct String {char *str; size_t size} StringBuffer; 
 
 /***************** 
  * START HELPERS *
@@ -32,15 +29,32 @@ typedef struct String {char *str; size_t size} StringBuffer;
 
 /****************************** Math Functions ******************************/
 
+/*
+* Calculate the great common devider for a and b
+* a and b must be positive
+*/
+uint64_t gcd(uint64_t a, uint64_t b);
 
+/*
+* Calculate the addition inverse of number a for (modn)
+* it return's -a for (modn)
+*/
+uint64_t addModInverse(uint64_t a, uint64_t n);
 
-/***************************** Boolean Functions ****************************/
+/*
+* Calculate the multiplication inverse of number a for (modn)
+* it return's a^(-1) for (modn), gcd(a, n) must be 1
+*/
+uint64_t mulModInverse(uint64_t a, uint64_t n);
 
+/****************************** Boolean Functions ******************************/
 
+/*
+*return 1 if they are the same class (modn), return 0 else
+*/
+int isSameModClass(uint64_t a, uint64_t b, uint64_t n);
 
-/**************************** Extraction Functions **************************/
-
-
+int hasModInverse(uint64_t a, uint64_t b);
 
 /***************
  * END HELPERS *

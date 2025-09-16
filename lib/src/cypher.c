@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-#include <stdbool.h>
 #include "cypher.h"
 
 /***************** 
@@ -23,47 +22,15 @@
 
 /****************************** Math Functions ******************************/
 
-uint64_t gcd(uint64_t a, uint64_t b)
-{
-    while (b) {uint64_t r = a % b; a = b; b = r;}
-    return a;
-}
 
-uint64_t addModInverse(uint64_t a, uint64_t n)
-{
-    return n - a % n;
-}
 
-uint64_t mulModInverse(uint64_t a, uint64_t n)
-{
-    if(!hasModInverse(a, n))
-        return 0;
-    int64_t __x = 1, _x = 0, __y = 0, _y = 1;
-    int64_t __r = (int64_t) a, _r = (int64_t) n;
-    while (_r)
-    {
-        int64_t q = __r / _r;
-        int64_t r = __r - q * _r;
-        int64_t x = __x - q * _x;
-        int64_t y = __y - q * _y;
-        __x = _x; _x = x;
-        __y = _y; _y = y;
-        __r = _r; _r = r;
-    }
-    return (uint64_t)((__x % (int64_t)n + (int64_t)n) % (int64_t)n);
-}
+/***************************** Boolean Functions ****************************/
 
-/****************************** Boolean Functions ******************************/
 
-int isSameModClass(uint64_t a, uint64_t b, uint64_t n)
-{
-    return n ? (a % n == b % n) : (a == b);
-}
 
-int hasModInverse(uint64_t a, uint64_t n)
-{
-    return gcd(a,n) == 1;
-}
+/**************************** Extraction Functions **************************/
+
+
 
 /***************
  * END HELPERS *
