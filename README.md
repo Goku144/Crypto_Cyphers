@@ -157,7 +157,7 @@ If you add other references or third-party code, include their licenses in `LICE
 
 ## Roadmap (draft)
 
-* [OK] Number theory helpers (gcd, mod inverse, powmod, CRT)
+* [ ] Number theory helpers (gcd, mod inverse, powmod, CRT)
 * [ ] Classical ciphers (Caesar, Vigenère, affine, Hill)
 * [ ] Modern primitives (PRNG seeding, padding, PKCS#7)
 * [ ] Hashes (SHA-256) and MAC (HMAC)
