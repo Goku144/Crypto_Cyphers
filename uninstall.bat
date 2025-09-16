@@ -1,7 +1,9 @@
-cd lib
+cd lib/src
 make uninstall
 cd ..
-cd CLI\src
+cd ..
+cd CLI/src
 make clean
 .\run.bat uninstall
+cd ..
 cd ..

@@ -1,8 +1,10 @@
-cd lib
+cd lib/src
 make install clean
 cd ..
-cd CLI\src
+cd ..
+cd CLI/src
 make clean
 make
 .\run.bat install
+cd ..
 cd ..
