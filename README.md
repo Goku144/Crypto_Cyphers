@@ -1,4 +1,5 @@
-```md
+Here’s a clean, ready-to-paste **README.md** for your repo.
+
 # Crypto_Cyphers
 
 Open-source cryptography project with:
@@ -12,31 +13,30 @@ Open-source cryptography project with:
 
 ## Status
 
-- ✅ Repo structure in place
-- 🛠️ Implementing core primitives and classic ciphers
+- ✅ Repo structure in place  
+- 🛠️ Implementing core primitives and classic ciphers  
 - 📚 Notes in `MATH/` are being written from scratch (my own perspective)
 
 ---
 
 ## Repository layout
 
-```
-
-D:.
+```text
+.
 ├── .vscode/                  # editor settings (optional)
 ├── bin/                      # top-level build output (optional)
 ├── CLI/                      # CLI program (MIT)
 │   ├── src/
 │   │   ├── bin/              # CLI executable output (e.g., cypher.exe)
-│   │   ├── main.c            # entry point for the CLI 'cypher' tool 
-│   │   └──Makefile
+│   │   └── main.c            # entry point for the CLI 'cypher' tool
+│   ├── Makefile
 │   ├── run.bat
-│   └── LICENSE               # MIT
+│   └── LICENCE               # MIT (note British spelling)
 ├── lib/                      # C library (Apache-2.0)
 │   ├── src/
 │   │   ├── cypher.c
-│   │   ├── cypher.h
-│   │   └──Makefile
+│   │   └── cypher.h
+│   ├── Makefile
 │   ├── LICENSE               # Apache-2.0
 │   └── NOTICE
 ├── LICENSES/                 # canonical copies of licenses
@@ -47,8 +47,14 @@ D:.
 ├── install.bat               # (optional) convenience installers
 ├── uninstall.bat             # (optional)
 └── README.md
-
 ````
+
+---
+
+## Prerequisites
+
+* **Windows**: [MSYS2](https://www.msys2.org) (MinGW-w64), `make`, GCC toolchain
+* **Linux**: GCC, `make`
 
 ---
 
@@ -56,37 +62,38 @@ D:.
 
 ### Windows (MSYS2 MinGW-w64)
 
-1) Install **MSYS2** → https://www.msys2.org  
-2) Open *MSYS2 MinGW x64* shell and install toolchain:
-```bash
-pacman -Syu --noconfirm
-pacman -S --needed --noconfirm mingw-w64-x86_64-toolchain make
-````
+1. Open **MSYS2 MinGW x64** shell and install toolchain:
 
-3. Build the **library**:
+   ```bash
+   pacman -Syu --noconfirm
+   pacman -S --needed --noconfirm mingw-w64-x86_64-toolchain make
+   ```
 
-```bash
-cd /d/CYPHER/lib
-make              # produces .dll / .a depending on the Makefile
-```
+2. Build the **library**:
 
-4. Build the **CLI**:
+   ```bash
+   cd /d/CYPHER/lib
+   make                 # produces DLL/import lib or static lib per Makefile
+   ```
 
-```bash
-cd /d/CYPHER/CLI
-make              # produces .\src\bin\cypher.exe
-```
+3. Build the **CLI**:
 
-5. (Optional) Ensure the runtime can find GCC DLLs:
+   ```bash
+   cd /d/CYPHER/CLI
+   make                 # produces .\src\bin\cypher.exe
+   ```
 
-* Add `C:\msys64\mingw64\bin` to your **User PATH** or run the CLI from the *MinGW x64* shell.
+4. Ensure the runtime can find GCC/Mingw DLLs:
+
+   * Add `C:\msys64\mingw64\bin` to your **User PATH**, or run the CLI from the *MinGW x64* shell.
 
 > If your Makefiles place outputs elsewhere, adjust paths accordingly.
 
 ### Linux (GCC/Make)
 
 ```bash
-sudo apt-get install build-essential make
+sudo apt-get update
+sudo apt-get install -y build-essential make
 cd lib && make
 cd ../CLI && make
 ```
@@ -98,17 +105,18 @@ cd ../CLI && make
 ```powershell
 # Windows PowerShell (after building)
 .\CLI\src\bin\cypher.exe --help
+
 # examples will be added as algorithms land:
 # .\CLI\src\bin\cypher.exe caesar --key 3 --in msg.txt --out enc.txt
 ```
 
-Library (example):
+Library (example skeleton):
 
 ```c
 #include "cypher.h"
 
 int main(void) {
-    // TODO: example once API is finalized
+    // TODO: call library APIs once finalized
     return 0;
 }
 ```
@@ -128,7 +136,7 @@ int main(void) {
 This repository uses **per-folder licensing**:
 
 * **Library (`/lib`)** — **Apache-2.0**. See [`lib/LICENSE`](./lib/LICENSE) and [`lib/NOTICE`](./lib/NOTICE).
-* **CLI (`/CLI`)** — **MIT**. See [`CLI/LICENCE`](./CLI/LICENCE) *(or `LICENSE` depending on your filename)*.
+* **CLI (`/CLI`)** — **MIT**. See [`CLI/LICENCE`](./CLI/LICENCE) *(or rename to `LICENSE` if you prefer U.S. spelling)*.
 
 Canonical texts are available in [`/LICENSES`](./LICENSES).
 The top-level [`LICENSE`](./LICENSE) explains the layout.
@@ -136,10 +144,10 @@ The top-level [`LICENSE`](./LICENSE) explains the layout.
 Per-file SPDX headers:
 
 ```c
-/* lib/… (Apache-2.0) */
+/* lib/... (Apache-2.0) */
  /* SPDX-License-Identifier: Apache-2.0 */
 
-/* CLI/… (MIT) */
+/* CLI/... (MIT) */
  /* SPDX-License-Identifier: MIT */
 ```
 
@@ -183,11 +191,7 @@ If you add other references or third-party code, include their licenses in `LICE
 * Follow SPDX headers and match the correct folder license.
 * Keep algorithms well-commented and accompanied by test vectors.
 
----
-
 ```
 
-### Notes for you
-- In your screenshot, the CLI file is named `LICENCE` (British spelling). That’s fine—just make sure the README links to the exact filename or rename it to `LICENSE` for consistency.
-- If you want, paste me your preferred author name/email and I’ll add them in the README and `lib/NOTICE`.
+If you want this tweaked with your author name/email (and to adjust links if you rename `LICENCE` → `LICENSE`), tell me the exact strings and I’ll patch them in.
 ```
