@@ -13,6 +13,6 @@ int main(int argc, const char *argv[]) {
         return 1;
     }
     char *end;
-    printf("%llu\n", gcd(strtoull(argv[1], &end, 10), strtoull(argv[2], &end, 10)));
+    printf("%"PRIu64"\n", EEA(strtoull(argv[1], &end, 10), strtoull(argv[2], &end, 10)));
     return 0;
 }

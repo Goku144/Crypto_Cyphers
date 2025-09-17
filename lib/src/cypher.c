@@ -22,15 +22,49 @@
 
 /****************************** Math Functions ******************************/
 
-/*
-* Calculate the Greatest Common Divisor for a and b
-* a and b must be positive 
-*/
-uint64_t gcd(uint64_t a, uint64_t b);
+uint64_t gcd(uint64_t a, uint64_t b)
+{
+    while (b)
+    {
+        uint64_t r = a % b;
+        a = b; // the next a
+        b = r; // the next b
+    }
+    return a;
+}
+
+uint64_t additiveModInverse(uint64_t a, uint64_t n)
+{
+    return n - a % n;
+}
+
+uint64_t EEA(uint64_t a, uint64_t n)
+{
+    if(!hasMulModInverse(a,n)) {fprintf(stderr, "gcd(%"PRIu64",%"PRIu64") is different then 1\n", a, n); return 0;}
+    // __t represent t-2 and _t represent t-1
+    int64_t __x = 1, _x = 0, mod = n;
+    while (n)
+    {
+        int64_t r = (int64_t) a % n;
+        int64_t x = __x - (a / n)*_x;
+        __x = _x; _x = x;
+        a = n; 
+        n = r;
+    }
+    return (uint64_t) (mod + (__x % mod)) % mod;
+}
 
 /***************************** Boolean Functions ****************************/
 
+uint64_t isCongruent(uint64_t a, uint64_t b, uint64_t n)
+{
+    return a % n == b % n;
+}
 
+uint64_t hasMulModInverse(uint64_t a, uint64_t n)
+{
+    return gcd(a,n) == 1;
+}
 
 /**************************** Extraction Functions **************************/
 

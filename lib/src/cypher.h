@@ -15,9 +15,9 @@
  */
 
 #include <stdio.h>
-#include <stdbool.h>
-#include <stdint.h>
 #include <stdlib.h>
+#include <stdint.h>
+#include <inttypes.h>
 
 #if !defined(__CYPHER_KEYS__)
 #define __CYPHER_KEYS__
@@ -32,20 +32,37 @@ typedef struct String {char *str; size_t size;} StringBuffer;
 
 /****************************** Math Functions ******************************/
 
-uint64_t gcd(uint64_t a, uint64_t b)
-{
-    while (b)
-    {
-        uint64_t r = a % b;
-        a = b; // the next a
-        b = r; // the next b
-    }
-    return a;
-}
+/*
+* Calculate the Greatest Common Divisor for 
+* a and b, and they must be positive 
+*/
+uint64_t gcd(uint64_t a, uint64_t b);
+
+/*
+* Calculate the additive Inverse of a
+* modulo n (-a)
+*/
+uint64_t additiveModInverse(uint64_t a, uint64_t n);
+
+/*
+* Calculate the Multiplicative Inverse of a
+* modulo n (-a)
+*/
+uint64_t EEA(uint64_t a, uint64_t n);
 
 /***************************** Boolean Functions ****************************/
 
+/*
+* Returns 1 if a is Congruent b modulo n
+* Returns 0 if not
+*/
+uint64_t isCongruent(uint64_t a, uint64_t b, uint64_t n);
 
+/*
+* Returns 1 if a has inverse modulo n
+* Returns 0 if not
+*/
+uint64_t hasMulModInverse(uint64_t a, uint64_t n);
 
 /**************************** Extraction Functions **************************/
 
@@ -54,4 +71,5 @@ uint64_t gcd(uint64_t a, uint64_t b)
 /***************
  * END HELPERS *
  ***************/
+
 #endif // __CYPHER_KEYS__
