@@ -46,7 +46,8 @@ uint64_t additiveModInverse(uint64_t a, uint64_t n);
 
 /*
 * Calculate the Multiplicative Inverse of a
-* modulo n (-a)
+* modulo n (-a) using the Extended Euclidean
+* Algorithm
 */
 uint64_t EEA(uint64_t a, uint64_t n);
 
