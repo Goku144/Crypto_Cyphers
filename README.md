@@ -152,7 +152,6 @@ If you add other references or third-party code, include their licenses in `LICE
 
 * For education and research. **Not** audited for production or safety-critical use.
 * If you find a vulnerability, please open a private advisory or email: **[ytyui31@gmail.com](mailto:ytyui31@gmail.com).
-=======
 
 ---
 
