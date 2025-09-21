@@ -152,9 +152,9 @@ If you add other references or third-party code, include their licenses in `LICE
 
 * For education and research. **Not** audited for production or safety-critical use.
 <<<<<<< HEAD
-* If you find a vulnerability, please open a private advisory or email: **[security@example.com](mailto:ytyui31@gmail.com)** (replace with your contact).
+* If you find a vulnerability, please open a private advisory or email: **[ytyui31@gmail.com](mailto:ytyui31@gmail.com)** (replace with your contact).
 =======
-* If you find a vulnerability, please open a private advisory or email: **[security@example.com](mailto:ytyui31@gmail.com).
+* If you find a vulnerability, please open a private advisory or email: **[ytyui31@gmail.com](mailto:ytyui31@gmail.com).
 >>>>>>> b1a21d8ade567c9adec70977408685b2e1e0cce8
 
 ---
