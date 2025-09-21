@@ -151,7 +151,7 @@ If you add other references or third-party code, include their licenses in `LICE
 ## Security & Disclaimer
 
 * For education and research. **Not** audited for production or safety-critical use.
-* If you find a vulnerability, please open a private advisory or email: **[security@example.com](mailto:security@example.com)** (replace with your contact).
+* If you find a vulnerability, please open a private advisory or email: **[security@example.com](mailto:ytyui31@gmail.com).
 
 ---
 
