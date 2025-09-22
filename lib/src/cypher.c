@@ -54,6 +54,19 @@ uint64_t EEA(uint64_t a, uint64_t n)
     return (uint64_t) (mod + (__x % mod)) % mod;
 }
 
+Pair MRA(uint64_t n)
+{
+    n = n-1;
+    Pair res = {0,0};
+    while(!(n % 2))
+    {
+        n = n >> 1;
+        res.power++;
+    }
+    res.odd = n;
+    return res;
+}
+
 /***************************** Boolean Functions ****************************/
 
 uint64_t isCongruent(uint64_t a, uint64_t b, uint64_t n)

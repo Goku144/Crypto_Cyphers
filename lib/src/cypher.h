@@ -25,7 +25,7 @@
 /****************************** Type Definition *****************************/
 
 typedef struct String {char *str; size_t size;} StringBuffer; 
-
+typedef struct Pair {uint64_t power; uint64_t odd;} Pair;
 /***************** 
  * START HELPERS *
  *****************/
@@ -50,6 +50,9 @@ uint64_t additiveModInverse(uint64_t a, uint64_t n);
 * Algorithm
 */
 uint64_t EEA(uint64_t a, uint64_t n);
+
+
+Pair MRA(uint64_t n);
 
 /***************************** Boolean Functions ****************************/
 

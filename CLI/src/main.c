@@ -13,6 +13,7 @@ int main(int argc, const char *argv[]) {
         return 1;
     }
     char *end;
-    printf("%"PRIu64"\n", EEA(strtoull(argv[1], &end, 10), strtoull(argv[2], &end, 10)));
+    Pair res = MRA(strtoull(argv[1], &end, 10));
+    printf("2^(%"PRIu64")%"PRIu64"\n", res.power, res.odd);
     return 0;
 }
