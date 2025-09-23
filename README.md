@@ -174,8 +174,3 @@ If you add other references or third-party code, include their licenses in `LICE
 * Open an issue for discussion before large changes.
 * Follow SPDX headers and match the correct folder license.
 * Keep algorithms well-commented and accompanied by test vectors.
-
-```
-
-If you want this tweaked with your author name/email (and to adjust links if you rename `LICENCE` → `LICENSE`), tell me the exact strings and I’ll patch them in.
-```
