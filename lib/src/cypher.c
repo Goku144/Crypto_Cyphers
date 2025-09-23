@@ -24,6 +24,9 @@
 
 uint64_t gcd(uint64_t a, uint64_t b)
 {
+    if(!a) return b;
+    if(!b) return a;
+
     while (b)
     {
         uint64_t r = a % b;
@@ -54,17 +57,46 @@ uint64_t EEA(uint64_t a, uint64_t n)
     return (uint64_t) (mod + (__x % mod)) % mod;
 }
 
-Pair MRA(uint64_t n)
+MRA_VAL MRA(uint64_t n)
 {
-    n = n-1;
-    Pair res = {0,0};
-    while(!(n % 2))
+    if(n < 3) {fprintf(stderr, "%"PRIu64" < 3, decomposition condition unsatisfied.\n", n); return MRA_ERR;}
+    if(!(n % 2)) return MRA_EVEN;
+    if(n == 3) return INCONCLUSIVE;
+
+    __uint128_t a = (__uint128_t) (rand() % (n - 1)); // it make a become born between 0 <= a < n - 1
+    if(a < 2) a += 2; // 1 < a < n - 1
+    __uint128_t a_q = 1, power = 0, odd = n - 1;
+
+    while (!(odd & 1))
     {
-        n = n >> 1;
-        res.power++;
+        odd >>= 1; // devid by 2
+        power++;
     }
-    res.odd = n;
-    return res;
+
+    while (odd) { // fast multiplication using binary base shifting
+        if (odd & 1) a_q = (a_q * a) % n;
+        a = (a * a) % n;
+        odd >>= 1;
+    }
+
+    if(a_q == 1) return INCONCLUSIVE;
+    for (__uint128_t i = 0; i < power; i++)
+    {
+        if (a_q == (__uint128_t) (n - 1))
+            return INCONCLUSIVE;
+        a_q = (a_q * a_q) % n;
+    }
+    return COMPOSITE;
+}
+
+MRA_VAL EMRA(uint64_t n, uint64_t prob) // probability that the Extensive MRA test will return INCONCLUSIVE is (1/4)^(prob)
+{
+    if (MRA(n) == MRA_ERR) return MRA_ERR;
+    if (MRA(n) == MRA_EVEN) return MRA_EVEN;
+    for (uint64_t i = 0; i < prob; i++)
+        if(MRA(n) == COMPOSITE)
+            return COMPOSITE;
+    return INCONCLUSIVE;  
 }
 
 /***************************** Boolean Functions ****************************/

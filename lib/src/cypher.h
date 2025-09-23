@@ -16,6 +16,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 #include <stdint.h>
 #include <inttypes.h>
 
@@ -25,7 +26,8 @@
 /****************************** Type Definition *****************************/
 
 typedef struct String {char *str; size_t size;} StringBuffer; 
-typedef struct Pair {uint64_t power; uint64_t odd;} Pair;
+typedef enum MRA_VAL {INCONCLUSIVE = 0, COMPOSITE = 1, MRA_EVEN = 2, MRA_ERR = 3} MRA_VAL;
+
 /***************** 
  * START HELPERS *
  *****************/
@@ -51,8 +53,21 @@ uint64_t additiveModInverse(uint64_t a, uint64_t n);
 */
 uint64_t EEA(uint64_t a, uint64_t n);
 
+/*
+* The Miller–Rabin Algorithm test for
+* primality of large numbers returns
+* inconclusive if its possible prime,
+* composite if its not and MRA_err if
+* there is a condition break
+*/
+MRA_VAL MRA(uint64_t n);
 
-Pair MRA(uint64_t n);
+/*
+* The Extended Miller–Rabin Algorithm 
+* uses repeated MRA to have better
+* result with (1/4)^prob error margin
+*/
+MRA_VAL EMRA(uint64_t n, uint64_t prob);
 
 /***************************** Boolean Functions ****************************/
 
