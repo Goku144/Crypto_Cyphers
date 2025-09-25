@@ -25,8 +25,10 @@
 
 /****************************** Type Definition *****************************/
 
-typedef struct String {char *str; size_t size;} StringBuffer; 
-typedef enum MRA_VAL {INCONCLUSIVE = 0, COMPOSITE = 1, MRA_EVEN = 2, MRA_ERR = 3} MRA_VAL;
+typedef enum FLAG {NORMAL, OVERFLOW, ERROR, ODD, EVEN, INCONCLUSIVE, COMPOSITE} FLAG;
+typedef struct Result {uint64_t res; FLAG flag;} Result;
+typedef struct String {char *str; size_t size;} StringBuffer;
+typedef struct Residu {uint64_t value; uint64_t mod;} Residu;
 
 /***************** 
  * START HELPERS *
@@ -38,20 +40,14 @@ typedef enum MRA_VAL {INCONCLUSIVE = 0, COMPOSITE = 1, MRA_EVEN = 2, MRA_ERR = 3
 * Calculate the Greatest Common Divisor for 
 * a and b, and they must be positive 
 */
-uint64_t gcd(uint64_t a, uint64_t b);
-
-/*
-* Calculate the additive Inverse of a
-* modulo n (-a)
-*/
-uint64_t additiveModInverse(uint64_t a, uint64_t n);
+Result gcd(uint64_t a, uint64_t b);
 
 /*
 * Calculate the Multiplicative Inverse of a
 * modulo n (-a) using the Extended Euclidean
 * Algorithm
 */
-uint64_t EEA(uint64_t a, uint64_t n);
+Result EEA(uint64_t a, uint64_t n);
 
 /*
 * The Miller–Rabin Algorithm test for
@@ -60,28 +56,20 @@ uint64_t EEA(uint64_t a, uint64_t n);
 * composite if its not and MRA_err if
 * there is a condition break
 */
-MRA_VAL MRA(uint64_t n);
+FLAG MRA(uint64_t n);
 
 /*
 * The Extended Miller–Rabin Algorithm 
 * uses repeated MRA to have better
 * result with (1/4)^prob error margin
 */
-MRA_VAL EMRA(uint64_t n, uint64_t prob);
-
-/***************************** Boolean Functions ****************************/
+FLAG EMRA(uint64_t n, uint64_t prob);
 
 /*
-* Returns 1 if a is Congruent b modulo n
-* Returns 0 if not
+* Calculate the number from its residu
+* using the Chinese Remainder Theorem
 */
-uint64_t isCongruent(uint64_t a, uint64_t b, uint64_t n);
-
-/*
-* Returns 1 if a has inverse modulo n
-* Returns 0 if not
-*/
-uint64_t hasMulModInverse(uint64_t a, uint64_t n);
+Result CRT(const Residu a[], uint64_t size);
 
 /**************************** Extraction Functions **************************/
 
