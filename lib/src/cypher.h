@@ -73,8 +73,6 @@ Result CRT(const Residu a[], uint64_t size);
 
 /**************************** Extraction Functions **************************/
 
-
-
 /***************
  * END HELPERS *
  ***************/
