@@ -21,6 +21,7 @@ LIBBASE := lib$(SNAME)
 DLL     := $(LIBBASE).dll
 IMPLIB  := $(LIBBASE).dll.a
 OBJ     := $(SNAME).o
+LDLIBS  ?= -lbcrypt
 
 # ---- Toolchain & flags ----
 CC      ?= gcc
@@ -64,7 +65,7 @@ $(OBJ): $(SRC) $(HDR)
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 $(DLL): $(OBJ)
-	$(CC) $(OBJ) $(LDFLAGS) -o $@
+	$(CC) $(OBJ) $(LDFLAGS) -o $@ $(LDLIBS)
 
 clean:
 	-$(RM) $(OBJ) $(DLL) $(IMPLIB)

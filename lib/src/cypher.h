@@ -16,19 +16,24 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
 #include <time.h>
 #include <stdint.h>
 #include <inttypes.h>
+#include <windows.h>
+#include <bcrypt.h>
 
 #if !defined(__CYPHER_KEYS__)
 #define __CYPHER_KEYS__
 
 /****************************** Type Definition *****************************/
 
-typedef enum FLAG {NORMAL, OVERFLOW, ERROR, ODD, EVEN, INCONCLUSIVE, COMPOSITE} FLAG;
-typedef struct Result {uint64_t res; FLAG flag;} Result;
-typedef struct String {char *str; size_t size;} StringBuffer;
-typedef struct Residu {uint64_t value; uint64_t mod;} Residu;
+typedef enum FLAG {NORMAL_CYPHER, OVERFLOW_CYPHER, ERROR_CYPHER} FLAG;
+typedef enum NUMBER_FLAG {INCONCLUSIVE, COMPOSITE, ODD, EVEN, PRIME, UNDEFINED} NUMBER_FLAG;
+typedef enum CRYPT {ENCRYPTION, DECRYPTION} CRYPT;
+typedef struct Residu64 {uint64_t value; uint64_t mod;} Residu64;
+typedef struct String {char *str; size_t size;} String, MonoalphabeticKey;
 
 /***************** 
  * START HELPERS *
@@ -40,14 +45,14 @@ typedef struct Residu {uint64_t value; uint64_t mod;} Residu;
 * Calculate the Greatest Common Divisor for 
 * a and b, and they must be positive 
 */
-Result gcd(uint64_t a, uint64_t b);
+uint64_t gcd(uint64_t a, uint64_t b);
 
 /*
 * Calculate the Multiplicative Inverse of a
 * modulo n (-a) using the Extended Euclidean
 * Algorithm
 */
-Result EEA(uint64_t a, uint64_t n);
+FLAG EEA(uint64_t a, uint64_t n, uint64_t *out);
 
 /*
 * The Miller–Rabin Algorithm test for
@@ -56,25 +61,33 @@ Result EEA(uint64_t a, uint64_t n);
 * composite if its not and MRA_err if
 * there is a condition break
 */
-FLAG MRA(uint64_t n);
+FLAG MRA(uint64_t n, NUMBER_FLAG *out);
 
 /*
 * The Extended Miller–Rabin Algorithm 
 * uses repeated MRA to have better
-* result with (1/4)^prob error margin
+* result64 with (1/4)^prob error margin
 */
-FLAG EMRA(uint64_t n, uint64_t prob);
+FLAG EMRA(uint64_t n, uint64_t prob, NUMBER_FLAG *outy);
 
 /*
-* Calculate the number from its residu
+* Calculate the number from its residu64
 * using the Chinese Remainder Theorem
 */
-Result CRT(const Residu a[], uint64_t size);
-
-/**************************** Extraction Functions **************************/
+FLAG CRT(const Residu64 a[], uint64_t size, uint64_t *out);
 
 /***************
  * END HELPERS *
  ***************/
+
+/****************************** Cypher Functions ****************************/
+
+/*
+* Caesar Cypher uses affine linear key mod 26
+* in the form y = keya^(-1)*(x - keyb) mod 26
+*/
+FLAG caesarCypher(const char *inpath, uint8_t keya, uint8_t keyb, CRYPT crypt, const char *outpath);
+
+FLAG monoalphabeticCypher(const char *inpath, char *key, CRYPT crypt, const char *outpath);
 
 #endif // __CYPHER_KEYS__
