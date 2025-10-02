@@ -6,29 +6,18 @@
 #include <string.h>
 #include <cypher.h>
 
-
-
 int main(int argc, const char *argv[]) 
 {   
-    monoalphabeticCypher(argv[1], NULL, DECRYPTION, argv[2]);
+    (void) argc;
+    uint8_t pair[] = "qwertzuiopasdfghjklyxcvbnm";
+    CY_KEY key = (CY_KEY) {.str=pair, .size=26, .owner=CY_OWNED};
+
+    cypher(argv[1], &key, monoalphabetic, CY_DECRYPTION, argv[2]);
+
+    printf("the key = ");
+    printf("%s", key.str);
+    printf("\n");
+    
     return 0;
 }
 
-// for (uint8_t i = 0; i < 26; i++)
-//         {
-//             printf("%c", key[i]);
-//             if (i != 25)
-//                 printf(", "); 
-//         }
-//         printf("\n\n");
-
-
-// NUMBER_FLAG out;
-//     for (size_t i = 3; i < 1000; i++)
-//     {
-//         EMRA(i,20,&out);
-//         if(out == INCONCLUSIVE)
-//             printf("%zu is prime\n", i);
-//         else
-//             printf("%zu is not prime\n", i);
-//     }

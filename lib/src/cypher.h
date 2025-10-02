@@ -29,11 +29,13 @@
 
 /****************************** Type Definition *****************************/
 
-typedef enum FLAG {NORMAL_CYPHER, OVERFLOW_CYPHER, ERROR_CYPHER} FLAG;
-typedef enum NUMBER_FLAG {INCONCLUSIVE, COMPOSITE, ODD, EVEN, PRIME, UNDEFINED} NUMBER_FLAG;
-typedef enum CRYPT {ENCRYPTION, DECRYPTION} CRYPT;
-typedef struct Residu64 {uint64_t value; uint64_t mod;} Residu64;
-typedef struct String {char *str; size_t size;} String, MonoalphabeticKey;
+typedef enum CY_STATE_FLAG {CY_NORMAL, CY_ERROR} CY_STATE_FLAG;
+typedef enum CY_PRIMALITY_FLAG {CY_INCONCLUSIVE, CY_COMPOSITE, CY_PRIME} CY_PRIMALITY_FLAG;
+typedef enum CY_OWNERSHIP_FLAG {CY_OWNED, CY_NOT_OWNED} CY_OWNERSHIP_FLAG;
+typedef enum CY_CRYPT {CY_ENCRYPTION, CY_DECRYPTION} CY_CRYPT;
+typedef struct CY_Residu64 {uint64_t value; uint64_t mod;} CY_Residu64;
+typedef struct CY_String {uint8_t *str; size_t size; CY_OWNERSHIP_FLAG owner;} CY_String, CY_KEY;
+typedef CY_STATE_FLAG (*CY_FUNC)(const CY_String file, const CY_CRYPT crypt, CY_KEY **key, uint8_t **buffer);
 
 /***************** 
  * START HELPERS *
@@ -52,7 +54,7 @@ uint64_t gcd(uint64_t a, uint64_t b);
 * modulo n (-a) using the Extended Euclidean
 * Algorithm
 */
-FLAG EEA(uint64_t a, uint64_t n, uint64_t *out);
+CY_STATE_FLAG EEA(uint64_t a, uint64_t n, uint64_t *out);
 
 /*
 * The Miller–Rabin Algorithm test for
@@ -61,20 +63,20 @@ FLAG EEA(uint64_t a, uint64_t n, uint64_t *out);
 * composite if its not and MRA_err if
 * there is a condition break
 */
-FLAG MRA(uint64_t n, NUMBER_FLAG *out);
+CY_STATE_FLAG MRA(uint64_t n, CY_PRIMALITY_FLAG *out);
 
 /*
 * The Extended Miller–Rabin Algorithm 
 * uses repeated MRA to have better
 * result64 with (1/4)^prob error margin
 */
-FLAG EMRA(uint64_t n, uint64_t prob, NUMBER_FLAG *outy);
+CY_STATE_FLAG EMRA(uint64_t n, uint64_t prob, CY_PRIMALITY_FLAG *outy);
 
 /*
 * Calculate the number from its residu64
 * using the Chinese Remainder Theorem
 */
-FLAG CRT(const Residu64 a[], uint64_t size, uint64_t *out);
+CY_STATE_FLAG CRT(const CY_Residu64 a[], uint64_t size, uint64_t *out);
 
 /***************
  * END HELPERS *
@@ -86,8 +88,14 @@ FLAG CRT(const Residu64 a[], uint64_t size, uint64_t *out);
 * Caesar Cypher uses affine linear key mod 26
 * in the form y = keya^(-1)*(x - keyb) mod 26
 */
-FLAG caesarCypher(const char *inpath, uint8_t keya, uint8_t keyb, CRYPT crypt, const char *outpath);
+// CY_STATE_FLAG caesarCypher(const char *inpath, uint8_t keya, uint8_t keyb, CY_CRYPT crypt, const char *outpath);
 
-FLAG monoalphabeticCypher(const char *inpath, char *key, CRYPT crypt, const char *outpath);
+CY_STATE_FLAG cypher(const char *inpath, CY_KEY *key, const CY_FUNC cypherfunc, const CY_CRYPT crypt, const char *outpath);
+
+CY_STATE_FLAG normal(const CY_String file, const CY_CRYPT crypt, CY_KEY **key, uint8_t **buffer);
+
+CY_STATE_FLAG caesar(const CY_String file, const CY_CRYPT crypt, CY_KEY **key, uint8_t **buffer);
+
+CY_STATE_FLAG monoalphabetic(const CY_String file, const CY_CRYPT crypt, CY_KEY **key, uint8_t **buffer);
 
 #endif // __CYPHER_KEYS__
