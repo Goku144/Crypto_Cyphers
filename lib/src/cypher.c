@@ -23,15 +23,15 @@
 /****************************** Random Functions ******************************/
 
 #define DECL_RANDOM_UNIFORM_UNSIGNED(T, name)                                      \
-static CY_STATE_FLAG name(const T n, T *out) {                                       \
-    if (!out || n == 0) return CY_ERROR;                                       \
+static CY_STATE_FLAG name(const T n, T *out) {                                     \
+    if (!out || n == 0) return CY_ERROR;                                           \
     const T max = (T)~(T)0; /* 2^w - 1 */                                          \
     const T lim = (T)(max - (max % n)); /* multiple of n */                        \
     for (;;) {                                                                     \
         NTSTATUS st = BCryptGenRandom(NULL, (PUCHAR)out, (ULONG)sizeof(T),         \
                                       BCRYPT_USE_SYSTEM_PREFERRED_RNG);            \
-        if (st != 0) return CY_ERROR;                                          \
-        if (*out < lim) { *out = (T)(*out % n); return CY_NORMAL; }            \
+        if (st != 0) return CY_ERROR;                                              \
+        if (*out < lim) { *out = (T)(*out % n); return CY_NORMAL; }                \
     }                                                                              \
 }
 

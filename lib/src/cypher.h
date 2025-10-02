@@ -44,37 +44,33 @@ typedef CY_STATE_FLAG (*CY_FUNC)(const CY_String file, const CY_CRYPT crypt, CY_
 /****************************** Math Functions ******************************/
 
 /*
-* Calculate the Greatest Common Divisor for 
-* a and b, and they must be positive 
+* Calculate the Greatest Common Divisor for a and b, 
+* and they must be positive 
 */
 uint64_t gcd(uint64_t a, uint64_t b);
 
 /*
-* Calculate the Multiplicative Inverse of a
-* modulo n (-a) using the Extended Euclidean
-* Algorithm
+* Calculate the Multiplicative Inverse of a modulo n (-a) using the 
+* Extended Euclidean Algorithm
 */
 CY_STATE_FLAG EEA(uint64_t a, uint64_t n, uint64_t *out);
 
 /*
-* The Miller–Rabin Algorithm test for
-* primality of large numbers returns
-* inconclusive if its possible prime,
-* composite if its not and MRA_err if
+* The Miller–Rabin Algorithm test for primality of large numbers returns 
+* inconclusive if its possible prime, composite if its not and MRA_err if 
 * there is a condition break
 */
 CY_STATE_FLAG MRA(uint64_t n, CY_PRIMALITY_FLAG *out);
 
 /*
-* The Extended Miller–Rabin Algorithm 
-* uses repeated MRA to have better
+* The Extended Miller–Rabin Algorithm uses repeated MRA to have better
 * result64 with (1/4)^prob error margin
 */
 CY_STATE_FLAG EMRA(uint64_t n, uint64_t prob, CY_PRIMALITY_FLAG *outy);
 
 /*
-* Calculate the number from its residu64
-* using the Chinese Remainder Theorem
+* Calculate the number from its residu64 using the Chinese Remainder 
+* Theorem
 */
 CY_STATE_FLAG CRT(const CY_Residu64 a[], uint64_t size, uint64_t *out);
 
@@ -84,18 +80,23 @@ CY_STATE_FLAG CRT(const CY_Residu64 a[], uint64_t size, uint64_t *out);
 
 /****************************** Cypher Functions ****************************/
 
-/*
-* Caesar Cypher uses affine linear key mod 26
-* in the form y = keya^(-1)*(x - keyb) mod 26
-*/
-// CY_STATE_FLAG caesarCypher(const char *inpath, uint8_t keya, uint8_t keyb, CY_CRYPT crypt, const char *outpath);
-
 CY_STATE_FLAG cypher(const char *inpath, CY_KEY *key, const CY_FUNC cypherfunc, const CY_CRYPT crypt, const char *outpath);
 
+/*
+* Normal Cypher just copy the content and past it in other file
+*/
 CY_STATE_FLAG normal(const CY_String file, const CY_CRYPT crypt, CY_KEY **key, uint8_t **buffer);
 
+/*
+* Caesar Cypher uses affine linear key mod 26 in the form y = keya^(-1)*(x - keyb) mod 26
+*/
 CY_STATE_FLAG caesar(const CY_String file, const CY_CRYPT crypt, CY_KEY **key, uint8_t **buffer);
 
+/*
+* Monoalphabetic Cypher uses english letter frequency to determine the decryption key and uses Fisher–Yates shuffle to generate 
+* Encryption key.if the key was insert use CY_NOT_OWNED FLAG and be awear the key value  can change to adapt to the type of 
+* manipulation and give the key responsible for it
+*/
 CY_STATE_FLAG monoalphabetic(const CY_String file, const CY_CRYPT crypt, CY_KEY **key, uint8_t **buffer);
 
 #endif // __CYPHER_KEYS__
