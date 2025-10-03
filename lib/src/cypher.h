@@ -87,8 +87,8 @@ CY_STATE_FLAG inv_EASCII_key(const CY_KEY key, CY_KEY *invkey);
 
 CY_STATE_FLAG cypher(const char *inpath, CY_KEY *key, const CY_FUNC cypherfunc, const char *outpath);
 
-CY_STATE_FLAG CY_encryption_caesar_alphabet(const CY_String file, CY_KEY *key, uint8_t **buffer);
+CY_STATE_FLAG CY_encryption_caesar(const CY_String file, CY_KEY *key, uint8_t **buffer);
 
-CY_STATE_FLAG CY_decryption_caesar_alphabet(const CY_String file, CY_KEY *key, uint8_t **buffer);
+CY_STATE_FLAG CY_decryption_caesar(const CY_String file, CY_KEY *key, uint8_t **buffer);
 
 #endif // __CYPHER_KEYS__

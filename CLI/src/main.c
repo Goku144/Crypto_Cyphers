@@ -10,7 +10,7 @@ int main(int argc, const char *argv[])
 {   
     uint8_t keystr[] = {2,1};
     CY_KEY key = {.owner=CY_OWNED,.size=2,.str=keystr};
-    cypher(argv[1], &key, CY_decryption_caesar_alphabet, argv[2]);
+    cypher(argv[1], &key, CY_decryption_caesar, argv[2]);
 
     return 0;
 }

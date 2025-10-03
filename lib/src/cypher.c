@@ -459,7 +459,7 @@ CY_STATE_FLAG cypher(const char *inpath, CY_KEY *key, const CY_FUNC cypherfunc, 
     free(buffer); freeFile(&file); return CY_NORMAL;
 }
 
-CY_STATE_FLAG CY_encryption_caesar_alphabet(const CY_String file, CY_KEY *key, uint8_t **buffer)
+CY_STATE_FLAG CY_encryption_caesar(const CY_String file, CY_KEY *key, uint8_t **buffer)
 {
     for (size_t i = 0; i < file.size; i++) (*buffer)[i] = file.str[i];
 
@@ -468,7 +468,7 @@ CY_STATE_FLAG CY_encryption_caesar_alphabet(const CY_String file, CY_KEY *key, u
     return CY_SHIFT_key('A', 'Z', key, (CY_String) {.owner=file.owner, .size=file.size, .str=(*buffer)});
 }
 
-CY_STATE_FLAG CY_decryption_caesar_alphabet(const CY_String file, CY_KEY *key, uint8_t **buffer)
+CY_STATE_FLAG CY_decryption_caesar(const CY_String file, CY_KEY *key, uint8_t **buffer)
 {
     for (size_t i = 0; i < file.size; i++) (*buffer)[i] = file.str[i];
 
