@@ -8,16 +8,14 @@
 
 int main(int argc, const char *argv[]) 
 {   
-    (void) argc;
-    uint8_t pair[] = "qwertzuiopasdfghjklyxcvbnm";
-    CY_KEY key = (CY_KEY) {.str=pair, .size=26, .owner=CY_OWNED};
+    uint8_t keystr[] = {2,1};
+    CY_KEY key = {.owner=CY_OWNED,.size=2,.str=keystr};
+    cypher(argv[1], &key, CY_decryption_caesar_alphabet, argv[2]);
 
-    cypher(argv[1], &key, monoalphabetic, CY_DECRYPTION, argv[2]);
-
-    printf("the key = ");
-    printf("%s", key.str);
-    printf("\n");
-    
     return 0;
 }
+
+// CY_KEY key = (CY_KEY) {.str=pair, .size=26, .owner=CY_OWNED};
+
+// cypher(argv[1], &key, monoalphabetic, CY_DECRYPTION, argv[2]);
 

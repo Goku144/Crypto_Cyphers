@@ -32,10 +32,9 @@
 typedef enum CY_STATE_FLAG {CY_NORMAL, CY_ERROR} CY_STATE_FLAG;
 typedef enum CY_PRIMALITY_FLAG {CY_INCONCLUSIVE, CY_COMPOSITE, CY_PRIME} CY_PRIMALITY_FLAG;
 typedef enum CY_OWNERSHIP_FLAG {CY_OWNED, CY_NOT_OWNED} CY_OWNERSHIP_FLAG;
-typedef enum CY_CRYPT {CY_ENCRYPTION, CY_DECRYPTION} CY_CRYPT;
 typedef struct CY_Residu64 {uint64_t value; uint64_t mod;} CY_Residu64;
 typedef struct CY_String {uint8_t *str; size_t size; CY_OWNERSHIP_FLAG owner;} CY_String, CY_KEY;
-typedef CY_STATE_FLAG (*CY_FUNC)(const CY_String file, const CY_CRYPT crypt, CY_KEY **key, uint8_t **buffer);
+typedef CY_STATE_FLAG (*CY_FUNC)(const CY_String file, CY_KEY *key, uint8_t **buffer);
 
 /***************** 
  * START HELPERS *
@@ -78,25 +77,18 @@ CY_STATE_FLAG CRT(const CY_Residu64 a[], uint64_t size, uint64_t *out);
  * END HELPERS *
  ***************/
 
-/****************************** Cypher Functions ****************************/
+/***************************** Key Functions ******************************/
 
-CY_STATE_FLAG cypher(const char *inpath, CY_KEY *key, const CY_FUNC cypherfunc, const CY_CRYPT crypt, const char *outpath);
+CY_STATE_FLAG new_EASCII_key(const uint8_t start, const uint8_t end, CY_KEY *key);
 
-/*
-* Normal Cypher just copy the content and past it in other file
-*/
-CY_STATE_FLAG normal(const CY_String file, const CY_CRYPT crypt, CY_KEY **key, uint8_t **buffer);
+CY_STATE_FLAG inv_EASCII_key(const CY_KEY key, CY_KEY *invkey);
 
-/*
-* Caesar Cypher uses affine linear key mod 26 in the form y = keya^(-1)*(x - keyb) mod 26
-*/
-CY_STATE_FLAG caesar(const CY_String file, const CY_CRYPT crypt, CY_KEY **key, uint8_t **buffer);
+/**************************** Cypher Functions ****************************/
 
-/*
-* Monoalphabetic Cypher uses english letter frequency to determine the decryption key and uses Fisher–Yates shuffle to generate 
-* Encryption key.if the key was insert use CY_NOT_OWNED FLAG and be awear the key value  can change to adapt to the type of 
-* manipulation and give the key responsible for it
-*/
-CY_STATE_FLAG monoalphabetic(const CY_String file, const CY_CRYPT crypt, CY_KEY **key, uint8_t **buffer);
+CY_STATE_FLAG cypher(const char *inpath, CY_KEY *key, const CY_FUNC cypherfunc, const char *outpath);
+
+CY_STATE_FLAG CY_encryption_caesar_alphabet(const CY_String file, CY_KEY *key, uint8_t **buffer);
+
+CY_STATE_FLAG CY_decryption_caesar_alphabet(const CY_String file, CY_KEY *key, uint8_t **buffer);
 
 #endif // __CYPHER_KEYS__
