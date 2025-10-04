@@ -91,4 +91,12 @@ CY_STATE_FLAG CY_encryption_caesar(const CY_String file, CY_KEY *key, uint8_t **
 
 CY_STATE_FLAG CY_decryption_caesar(const CY_String file, CY_KEY *key, uint8_t **buffer);
 
+CY_STATE_FLAG CY_encryption_monoalphabetic(const CY_String file, CY_KEY *key, uint8_t **buffer);
+
+CY_STATE_FLAG CY_decryption_monoalphabetic(const CY_String file, CY_KEY *key, uint8_t **buffer);
+
+CY_STATE_FLAG CY_encryption_EASCII(const CY_String file, CY_KEY *key, uint8_t **buffer);
+
+CY_STATE_FLAG CY_decryption_EASCII(const CY_String file, CY_KEY *key, uint8_t **buffer);
+
 #endif // __CYPHER_KEYS__

@@ -8,9 +8,26 @@
 
 int main(int argc, const char *argv[]) 
 {   
-    uint8_t keystr[] = {2,1};
-    CY_KEY key = {.owner=CY_OWNED,.size=2,.str=keystr};
-    cypher(argv[1], &key, CY_decryption_caesar, argv[2]);
+    (void) argc;
+    CY_KEY key = {.owner=CY_NOT_OWNED,.size=0,.str=NULL};
+
+    cypher(argv[1], &key, CY_encryption_EASCII, argv[2]);
+
+
+    for (int i = 0; i < 256; i++) 
+    {
+        printf("%02X->%02X%s", i & 0xFF, key.str[i], (i%8==7) ? "\n" : " ");
+    }
+    
+    cypher(argv[2], &key, CY_decryption_EASCII, argv[1]);
+
+    for (int i = 0; i < 256; i++) 
+    {
+        printf("%02X->%02X%s", i & 0xFF, key.str[i], (i%8==7) ? "\n" : " ");
+    }
+    
+
+    printf("\n");
 
     return 0;
 }
