@@ -20,7 +20,23 @@
  * START HELPERS *
  *****************/
 
-/****************************** Random Functions ******************************/
+
+
+
+/******************************************************** 
+ * 
+ * 
+ * 
+ * 
+ *                     Random Functions 
+ *
+ * 
+ * 
+ * 
+ *********************************************************/
+
+
+
 
 #define DECL_RANDOM_UNIFORM_UNSIGNED(T, name)                                                                           \
 static CY_STATE_FLAG name(const T n, T *out)                                                                            \
@@ -40,12 +56,26 @@ static CY_STATE_FLAG name(const T n, T *out)                                    
     }                                                                                                                   \
 }
 
-// declare (NO trailing semicolons)
 DECL_RANDOM_UNIFORM_UNSIGNED(uint16_t, random_u16)
 DECL_RANDOM_UNIFORM_UNSIGNED(__uint128_t, random_u128)
 
 
-/****************************** Math Functions ******************************/
+
+
+/******************************************************** 
+ * 
+ * 
+ * 
+ * 
+ *                     Math Functions 
+ *
+ * 
+ * 
+ * 
+ *********************************************************/
+
+
+
 
 uint64_t gcd(uint64_t a, uint64_t b)
 {
@@ -180,7 +210,23 @@ CY_STATE_FLAG CRT(const CY_Residu64 a[], const uint64_t size, uint64_t *out)
     return CY_NORMAL;
 }
 
-/***************************** File Functions *****************************/
+
+
+
+/******************************************************** 
+ * 
+ * 
+ * 
+ * 
+ *                     File Functions 
+ *
+ * 
+ * 
+ * 
+ *********************************************************/
+
+
+
 
 static CY_STATE_FLAG openFile(const char *path, FILE **fp, const char * _Mode)
 {
@@ -311,11 +357,30 @@ static CY_STATE_FLAG extractFile(const char *path, CY_String *buffer)
     return CY_NORMAL;
 }
 
+
+
+
 /***************
  * END HELPERS *
  ***************/
 
-/***************************** Key Functions ******************************/
+
+
+
+/******************************************************** 
+ * 
+ * 
+ * 
+ * 
+ *                      Key Functions 
+ *
+ * 
+ * 
+ * 
+ *********************************************************/
+
+
+
 
 CY_STATE_FLAG CY_GENERATE_key(const uint8_t start, const uint8_t end, CY_KEY *key)
 {
@@ -378,8 +443,7 @@ CY_STATE_FLAG CY_INVSHIFT_key(const uint8_t start, const uint8_t end, const CY_K
     for (size_t i = 0; i < buffer.size; i++)
     {
         char c = buffer.str[i];
-        c = (c >= start && c <= end) ? (char) ((keya * (mod + (c - start) - keyb % mod)) % mod + start) : c;
-        buffer.str[i] = c;
+        buffer.str[i] = (c >= start && c <= end) ? (uint8_t) ((keya * (mod + (c - start) - keyb % mod)) % mod + start) : c;
     }
     return CY_NORMAL;
 }
@@ -402,21 +466,98 @@ CY_STATE_FLAG CY_RAND_key(const uint8_t start, const uint8_t end, CY_KEY *key)
     return CY_NORMAL;
 }
 
-CY_STATE_FLAG CY_INVERSE_key(const uint8_t start, const uint8_t end, CY_KEY key, CY_KEY *invkey)
+CY_STATE_FLAG CY_INVERSE_key(const uint8_t start, const uint8_t end, CY_KEY key, CY_KEY keymap, CY_KEY *invkey)
 {
     if(key.owner == CY_NOT_OWNED || key.str == NULL || key.size < (size_t) (end - start + 1)) 
     {fprintf(stderr, "CY_INVERSE_key(-> KEY_ERROR: the key is (not owned, empty or size (end - start + 1) is greater then the key size)<-)\n"); return CY_ERROR;}
+
+    if(keymap.owner == CY_NOT_OWNED || keymap.str == NULL || keymap.size != key.size) 
+    {fprintf(stderr, "CY_INVERSE_key(-> KEY_ERROR: the keymap is (not owned, empty or size is diffrent then the key <-)\n"); return CY_ERROR;}
 
     if(mallocSpace((void **) &invkey->str, key.size * sizeof(uint8_t)) == CY_ERROR) return CY_ERROR; 
 
     invkey->owner = CY_OWNED; invkey->size = key.size;
 
-    for (uint16_t i = 0; i < (uint16_t) invkey->size; i++) invkey->str[key.str[i] - start] = (uint8_t) (i + start);
+    for (uint16_t i = 0; i < (uint16_t) invkey->size; i++) invkey->str[key.str[i] - start] = keymap.str[i];
 
     return CY_NORMAL;
 }
 
-/**************************** Cypher Functions ****************************/
+
+
+
+/******************************************************** 
+ * 
+ * 
+ * 
+ * 
+ *                    ASCII Functions 
+ *
+ * 
+ * 
+ * 
+ *********************************************************/
+
+
+
+
+static CY_STATE_FLAG CY_NORMAL_EASCII(const uint8_t start, const uint8_t end, CY_String file, CY_KEY *key, uint8_t **buffer)
+{   
+    for (size_t i = 0; i < file.size; i++)
+    {
+        uint8_t c = file.str[i];
+        (*buffer)[i] = (c >= start && c <= end) ? key->str[c - start] : c;
+    }
+    return CY_NORMAL;
+}
+
+static CY_STATE_FLAG CY_FREQUENT_EASCII(const uint8_t start, const uint8_t end, CY_String file, size_t *numtable)
+{   
+    for (size_t i = 0; i < file.size; i++)
+    {
+        uint8_t c = file.str[i];
+        if(c >= start && c <= end) numtable[c - start]++;
+    }
+    return CY_NORMAL;
+}
+
+static CY_STATE_FLAG CY_NORMAL_ABC(const CY_String file, CY_KEY *key, uint8_t **buffer)
+{
+    if(CY_NORMAL_EASCII('a', 'z', file, key, buffer) == CY_ERROR) return CY_ERROR;
+
+    for (size_t i = 0; i < key->size; i++) key->str[i] = key->str[i] - 'a' + 'A';
+
+    if(CY_NORMAL_EASCII('A', 'Z', (CY_String) {.owner=file.owner, .size=file.size, .str=(*buffer)}, key, buffer) == CY_ERROR) return CY_ERROR;
+
+    for (size_t i = 0; i < key->size; i++) key->str[i] = key->str[i] - 'A' + 'a';
+
+    return CY_NORMAL;
+}
+
+static CY_STATE_FLAG CY_FREQUENT_ABC(const CY_String file, size_t *numtable)
+{
+    if(CY_FREQUENT_EASCII('a', 'z', file, numtable) == CY_ERROR) return CY_ERROR;
+
+    return CY_FREQUENT_EASCII('A', 'Z', file, numtable);
+}
+
+
+
+
+/******************************************************** 
+ * 
+ * 
+ * 
+ * 
+ *                    Cypher Functions 
+ *
+ * 
+ * 
+ * 
+ *********************************************************/
+
+
+
 
 static CY_STATE_FLAG cypherStart(const char *inpath, CY_String *file, uint8_t **buffer)
 {
@@ -442,7 +583,6 @@ static CY_STATE_FLAG cypherFinish(const char *outpath, const CY_String file, con
     return CY_NORMAL;
 }
 
-
 CY_STATE_FLAG cypher(const char *inpath, CY_KEY *key, const CY_FUNC cypherfunc, const char *outpath)
 {
     CY_String file; uint8_t *buffer;
@@ -456,33 +596,6 @@ CY_STATE_FLAG cypher(const char *inpath, CY_KEY *key, const CY_FUNC cypherfunc, 
     free(buffer); freeFile(&file);
 
     return CY_NORMAL;
-}
-
-static void dump_hex(const uint8_t *p, size_t n) 
-{
-    for (size_t i = 0; i < n; i++) printf("%02X", p[i]);
-    putchar('\n');
-}
-
-CY_STATE_FLAG CY_NORMAL_EASCII(const uint8_t start, const uint8_t end, CY_String file, CY_KEY *key, uint8_t **buffer)
-{   
-    for (size_t i = 0; i < file.size; i++)
-    {
-        uint8_t c = file.str[i];
-        c = (c >= start && c <= end) ? key->str[c - start] : c;
-        (*buffer)[i] = c;
-    }
-    dump_hex(*buffer, file.size);
-    return CY_NORMAL;
-}
-
-CY_STATE_FLAG CY_NORMAL_ABC(const CY_String file, CY_KEY *key, uint8_t **buffer)
-{
-    if(CY_NORMAL_EASCII('a', 'z', file, key, buffer) == CY_ERROR) return CY_ERROR;
-
-    for (size_t i = 0; i < key->size; i++) key->str[i] = key->str[i] - 'a' + 'A';
-
-    return CY_NORMAL_EASCII('A', 'Z', (CY_String) {.owner=file.owner, .size=file.size, .str=(*buffer)}, key, buffer);
 }
 
 CY_STATE_FLAG CY_encryption_caesar(const CY_String file, CY_KEY *key, uint8_t **buffer)
@@ -505,32 +618,83 @@ CY_STATE_FLAG CY_decryption_caesar(const CY_String file, CY_KEY *key, uint8_t **
 
 CY_STATE_FLAG CY_encryption_monoalphabetic(const CY_String file, CY_KEY *key, uint8_t **buffer)
 {
-    if(CY_GENERATE_key('a', 'z', key) == CY_ERROR) return CY_ERROR;
+    if(key->owner == CY_NOT_OWNED)
+    {
+        if(CY_GENERATE_key('a', 'z', key) == CY_ERROR) return CY_ERROR;
 
-    if(CY_RAND_key('a', 'z', key) == CY_ERROR) return CY_ERROR;
+        if(CY_RAND_key('a', 'z', key) == CY_ERROR) return CY_ERROR;
+    }
+
+    if(key->str == NULL) 
+    {fprintf(stderr, "CY_encryption_monoalphabetic(-> KEY_ERROR: the key is owned but its null <-)\n"); return CY_ERROR;}
 
     return CY_NORMAL_ABC(file, key, buffer);
 }
 
 CY_STATE_FLAG CY_decryption_monoalphabetic(const CY_String file, CY_KEY *key, uint8_t **buffer)
 {
-    if(CY_INVERSE_key('a', 'z', *key, key) == CY_ERROR) return CY_ERROR;
+    uint8_t keymap[] = "abcdefghijklmnopqrstuvwxyz";
+    
+    if(CY_INVERSE_key('a', 'z', *key, (CY_KEY) {.owner=CY_OWNED, .size=26, .str=keymap}, key) == CY_ERROR) return CY_ERROR;
+    
+    if(CY_NORMAL_ABC(file, key, buffer) == CY_ERROR) return CY_ERROR;
+
+    return CY_INVERSE_key('a', 'z', *key, (CY_KEY) {.owner=CY_OWNED, .size=26, .str=keymap}, key);
+}
+
+CY_STATE_FLAG CY_crack_monoalphabetic(const CY_String file, CY_KEY *key, uint8_t **buffer)
+{
+    if(key->owner == CY_OWNED || key->str != NULL || key->size != 0) 
+    {fprintf(stderr, "CY_GENERATE_key(-> KEY_ERROR: the key is (owned, not empty or size is not 0) <-)\n"); return CY_ERROR;}
+
+    *key = (CY_KEY) {.owner=CY_OWNED, .size=26, .str=NULL};
+    if(mallocSpace((void **) &key->str, 26) == CY_ERROR) return CY_ERROR;
+
+    size_t numtable[26] = {0};
+    uint8_t freqchar[] = "etaoinshrdlcumwfgypbvkjxqz";
+    uint8_t chartable[] = "abcdefghijklmnopqrstuvwxyz";
+    
+    if (CY_FREQUENT_ABC(file, numtable) == CY_ERROR) return CY_ERROR;
+
+    for (size_t i = 0; i < 26; i++)
+    {
+        size_t k = i;
+
+        for (size_t j = i + 1; j < 26; j++) if(numtable[k] < numtable[j]) k = j;
+
+        size_t tmpnum = numtable[i]; numtable[i] = numtable[k]; numtable[k] = tmpnum;
+
+        char tmpchar = chartable[i]; chartable[i] = chartable[k]; chartable[k] = tmpchar;
+    }
+    
+    if(CY_INVERSE_key('a', 'z', (CY_KEY) {.owner=CY_OWNED, .size=26, .str=chartable}, (CY_KEY) {.owner=CY_OWNED, .size=26, .str=freqchar}, key) == CY_ERROR) return CY_ERROR;
     
     return CY_NORMAL_ABC(file, key, buffer);
 }
 
 CY_STATE_FLAG CY_encryption_EASCII(const CY_String file, CY_KEY *key, uint8_t **buffer)
 {
-    if(CY_GENERATE_key(0, 255, key) == CY_ERROR) return CY_ERROR;
+    if(key->owner == CY_NOT_OWNED)
+    {
+        if(CY_GENERATE_key(0, 255, key) == CY_ERROR) return CY_ERROR;
 
-    if(CY_RAND_key(0, 255, key) == CY_ERROR) return CY_ERROR;
+        if(CY_RAND_key(0, 255, key) == CY_ERROR) return CY_ERROR;
+    }
+
+    if(key->str == NULL) 
+    {fprintf(stderr, "CY_encryption_EASCII(-> KEY_ERROR: the key is owned but its null <-)\n"); return CY_ERROR;}
 
     return CY_NORMAL_EASCII(0, 255, file, key, buffer);
 }
 
 CY_STATE_FLAG CY_decryption_EASCII(const CY_String file, CY_KEY *key, uint8_t **buffer)
 {
-    if(CY_INVERSE_key(0, 255, *key, key) == CY_ERROR) return CY_ERROR;
+    uint8_t keymap[256];
+    for (uint16_t i = 0; i < 256; i++) keymap[i] = (uint8_t) i;
     
-    return CY_NORMAL_EASCII(0, 255,file, key, buffer);
+    if(CY_INVERSE_key(0, 255, *key, (CY_KEY) {.owner=CY_OWNED, .size=26, .str=keymap}, key) == CY_ERROR) return CY_ERROR;
+    
+    if(CY_NORMAL_EASCII(0, 255,file, key, buffer) == CY_ERROR) return CY_ERROR;
+
+    return CY_INVERSE_key(0, 255, *key, (CY_KEY) {.owner=CY_OWNED, .size=26, .str=keymap}, key);
 }

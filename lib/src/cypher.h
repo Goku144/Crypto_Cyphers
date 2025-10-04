@@ -79,9 +79,15 @@ CY_STATE_FLAG CRT(const CY_Residu64 a[], uint64_t size, uint64_t *out);
 
 /***************************** Key Functions ******************************/
 
-CY_STATE_FLAG new_EASCII_key(const uint8_t start, const uint8_t end, CY_KEY *key);
+CY_STATE_FLAG CY_GENERATE_key(const uint8_t start, const uint8_t end, CY_KEY *key);
 
-CY_STATE_FLAG inv_EASCII_key(const CY_KEY key, CY_KEY *invkey);
+CY_STATE_FLAG CY_SHIFT_key(const uint8_t start, const uint8_t end, const CY_KEY *key, CY_String buffer);
+
+CY_STATE_FLAG CY_INVSHIFT_key(const uint8_t start, const uint8_t end, const CY_KEY *key, CY_String buffer);
+
+CY_STATE_FLAG CY_RAND_key(const uint8_t start, const uint8_t end, CY_KEY *key);
+
+CY_STATE_FLAG CY_INVERSE_key(const uint8_t start, const uint8_t end, CY_KEY key, CY_KEY keymap, CY_KEY *invkey);
 
 /**************************** Cypher Functions ****************************/
 
@@ -94,6 +100,8 @@ CY_STATE_FLAG CY_decryption_caesar(const CY_String file, CY_KEY *key, uint8_t **
 CY_STATE_FLAG CY_encryption_monoalphabetic(const CY_String file, CY_KEY *key, uint8_t **buffer);
 
 CY_STATE_FLAG CY_decryption_monoalphabetic(const CY_String file, CY_KEY *key, uint8_t **buffer);
+
+CY_STATE_FLAG CY_crack_monoalphabetic(const CY_String file, CY_KEY *key, uint8_t **buffer);
 
 CY_STATE_FLAG CY_encryption_EASCII(const CY_String file, CY_KEY *key, uint8_t **buffer);
 

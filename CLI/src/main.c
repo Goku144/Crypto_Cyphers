@@ -9,24 +9,13 @@
 int main(int argc, const char *argv[]) 
 {   
     (void) argc;
-    CY_KEY key = {.owner=CY_NOT_OWNED,.size=0,.str=NULL};
+    uint8_t str[] = "vtkdjqxlsioyafphbewgrcnumz";
+    CY_KEY key = {.owner=CY_OWNED,.size=26,.str=str};
 
-    cypher(argv[1], &key, CY_encryption_EASCII, argv[2]);
+    cypher(argv[1], &key, CY_decryption_monoalphabetic, argv[2]);
 
-
-    for (int i = 0; i < 256; i++) 
-    {
-        printf("%02X->%02X%s", i & 0xFF, key.str[i], (i%8==7) ? "\n" : " ");
-    }
-    
-    cypher(argv[2], &key, CY_decryption_EASCII, argv[1]);
-
-    for (int i = 0; i < 256; i++) 
-    {
-        printf("%02X->%02X%s", i & 0xFF, key.str[i], (i%8==7) ? "\n" : " ");
-    }
-    
-
+    printf("the key: ");
+    for (size_t i = 0; i < key.size; i++) printf("%c", key.str[i]);
     printf("\n");
 
     return 0;
