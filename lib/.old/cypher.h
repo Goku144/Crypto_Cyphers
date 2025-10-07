@@ -14,49 +14,56 @@
  * limitations under the License.
  */
 
-
 #include <stdio.h>
-#include <ctype.h>
-#include <stdint.h>
 #include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+#include <time.h>
+#include <stdint.h>
+#include <inttypes.h>
+#include <windows.h>
+#include <bcrypt.h>
 
 #if !defined(__CYPHER_KEYS__)
 #define __CYPHER_KEYS__
 
-/***************** 
- * START HELPERS *
- *****************/
+/****************************** Type Definition *****************************/
 
-/****************************** Math Functions ******************************/
+typedef enum CY_STATE_FLAG {CY_NORMAL, CY_ERROR} CY_STATE_FLAG;
+typedef enum CY_PRIMALITY_FLAG {CY_INCONCLUSIVE, CY_COMPOSITE, CY_PRIME} CY_PRIMALITY_FLAG;
+typedef enum CY_OWNERSHIP_FLAG {CY_OWNED, CY_NOT_OWNED} CY_OWNERSHIP_FLAG;
+typedef struct CY_Residu64 {uint64_t value; uint64_t mod;} CY_Residu64;
+typedef struct CY_String {uint8_t *str; size_t size; CY_OWNERSHIP_FLAG owner;} CY_String, CY_KEY;
+typedef CY_STATE_FLAG (*CY_FUNC)(const CY_String file, CY_KEY *key, uint8_t **buffer);
 
-/*
-* Calculate the great common devider for a and b
-* a and b must be positive
-*/
-uint64_t gcd(uint64_t a, uint64_t b);
+/***************************** Key Functions ******************************/
 
-/*
-* Calculate the addition inverse of number a for (modn)
-* it return's -a for (modn)
-*/
-uint64_t addModInverse(uint64_t a, uint64_t n);
+CY_STATE_FLAG CY_GENERATE_key(const uint8_t start, const uint8_t end, CY_KEY *key);
 
-/*
-* Calculate the multiplication inverse of number a for (modn)
-* it return's a^(-1) for (modn), gcd(a, n) must be 1
-*/
-uint64_t mulModInverse(uint64_t a, uint64_t n);
+CY_STATE_FLAG CY_SHIFT_key(const uint8_t start, const uint8_t end, const CY_KEY *key, CY_String buffer);
 
-/****************************** Boolean Functions ******************************/
+CY_STATE_FLAG CY_INVSHIFT_key(const uint8_t start, const uint8_t end, const CY_KEY *key, CY_String buffer);
 
-/*
-*return 1 if they are the same class (modn), return 0 else
-*/
-int isSameModClass(uint64_t a, uint64_t b, uint64_t n);
+CY_STATE_FLAG CY_RAND_key(const uint8_t start, const uint8_t end, CY_KEY *key);
 
-int hasModInverse(uint64_t a, uint64_t b);
+CY_STATE_FLAG CY_INVERSE_key(const uint8_t start, const uint8_t end, CY_KEY key, CY_KEY keymap, CY_KEY *invkey);
 
-/***************
- * END HELPERS *
- ***************/
+/**************************** Cypher Functions ****************************/
+
+CY_STATE_FLAG cypher(const char *inpath, CY_KEY *key, const CY_FUNC cypherfunc, const char *outpath);
+
+CY_STATE_FLAG CY_encryption_caesar(const CY_String file, CY_KEY *key, uint8_t **buffer);
+
+CY_STATE_FLAG CY_decryption_caesar(const CY_String file, CY_KEY *key, uint8_t **buffer);
+
+CY_STATE_FLAG CY_encryption_monoalphabetic(const CY_String file, CY_KEY *key, uint8_t **buffer);
+
+CY_STATE_FLAG CY_decryption_monoalphabetic(const CY_String file, CY_KEY *key, uint8_t **buffer);
+
+CY_STATE_FLAG CY_crack_monoalphabetic(const CY_String file, CY_KEY *key, uint8_t **buffer);
+
+CY_STATE_FLAG CY_encryption_EASCII(const CY_String file, CY_KEY *key, uint8_t **buffer);
+
+CY_STATE_FLAG CY_decryption_EASCII(const CY_String file, CY_KEY *key, uint8_t **buffer);
+
 #endif // __CYPHER_KEYS__

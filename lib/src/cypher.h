@@ -29,82 +29,117 @@
 
 /****************************** Type Definition *****************************/
 
-typedef enum CY_STATE_FLAG {CY_NORMAL, CY_ERROR} CY_STATE_FLAG;
-typedef enum CY_PRIMALITY_FLAG {CY_INCONCLUSIVE, CY_COMPOSITE, CY_PRIME} CY_PRIMALITY_FLAG;
-typedef enum CY_OWNERSHIP_FLAG {CY_OWNED, CY_NOT_OWNED} CY_OWNERSHIP_FLAG;
-typedef struct CY_Residu64 {uint64_t value; uint64_t mod;} CY_Residu64;
-typedef struct CY_String {uint8_t *str; size_t size; CY_OWNERSHIP_FLAG owner;} CY_String, CY_KEY;
-typedef CY_STATE_FLAG (*CY_FUNC)(const CY_String file, CY_KEY *key, uint8_t **buffer);
+typedef enum CY_STATE_FLAG 
+{
 
-/***************** 
- * START HELPERS *
- *****************/
+    CY_OK,
 
-/****************************** Math Functions ******************************/
+    /* 1–19: generic */
+    CY_ERR,
+    CY_ERR_ARG,
+    CY_ERR_STATE,
+    CY_ERR_UNSUPPORTED,
+    CY_ERR_NOT_IMPL,
+    CY_ERR_INTERNAL,
 
-/*
-* Calculate the Greatest Common Divisor for a and b, 
-* and they must be positive 
-*/
-uint64_t gcd(uint64_t a, uint64_t b);
+    /* 20–39: memory/buffer */
+    CY_ERR_OOM,
+    CY_ERR_SPACE,     // (add now: caller out buffer too small)
+    CY_ERR_SIZE,      // invalid size/len
+    CY_ERR_OVERLAP,   // (add now: in/out overlap not allowed)
 
-/*
-* Calculate the Multiplicative Inverse of a modulo n (-a) using the 
-* Extended Euclidean Algorithm
-*/
-CY_STATE_FLAG EEA(uint64_t a, uint64_t n, uint64_t *out);
+    /* 40–59: I/O */
+    CY_ERR_IO,
+    CY_ERR_EOF,
+    CY_ERR_OPEN,
+    CY_ERR_CLOSE,
 
-/*
-* The Miller–Rabin Algorithm test for primality of large numbers returns 
-* inconclusive if its possible prime, composite if its not and MRA_err if 
-* there is a condition break
-*/
-CY_STATE_FLAG MRA(uint64_t n, CY_PRIMALITY_FLAG *out);
+    /* 60–79: parsing/validation (handy even if unused today) */
+    CY_ERR_FORMAT,    // parse error (hex/base64/etc.)
+    CY_ERR_VALUE,     // invalid content (e.g., not a permutation)
+    CY_ERR_RANGE,     // out of allowed range
 
-/*
-* The Extended Miller–Rabin Algorithm uses repeated MRA to have better
-* result64 with (1/4)^prob error margin
-*/
-CY_STATE_FLAG EMRA(uint64_t n, uint64_t prob, CY_PRIMALITY_FLAG *outy);
+    /* 80–109: crypto-specific */
+    CY_ERR_RNG,
+    CY_ERR_KEY,
+    CY_ERR_KEY_SIZE,
+    CY_ERR_KEY_VALUE,
 
-/*
-* Calculate the number from its residu64 using the Chinese Remainder 
-* Theorem
-*/
-CY_STATE_FLAG CRT(const CY_Residu64 a[], uint64_t size, uint64_t *out);
+} CY_STATE_FLAG;
 
-/***************
- * END HELPERS *
- ***************/
 
-/***************************** Key Functions ******************************/
+typedef enum CY_PRIMALITY_FLAG 
+{
 
-CY_STATE_FLAG CY_GENERATE_key(const uint8_t start, const uint8_t end, CY_KEY *key);
+    CY_INCONCLUSIVE, 
+    CY_COMPOSITE, 
+    CY_PRIME
 
-CY_STATE_FLAG CY_SHIFT_key(const uint8_t start, const uint8_t end, const CY_KEY *key, CY_String buffer);
+} CY_PRIMALITY_FLAG;
 
-CY_STATE_FLAG CY_INVSHIFT_key(const uint8_t start, const uint8_t end, const CY_KEY *key, CY_String buffer);
+typedef enum CY_OWNERSHIP_FLAG 
+{
 
-CY_STATE_FLAG CY_RAND_key(const uint8_t start, const uint8_t end, CY_KEY *key);
+    CY_OWNED,
+    CY_NOT_OWNED
 
-CY_STATE_FLAG CY_INVERSE_key(const uint8_t start, const uint8_t end, CY_KEY key, CY_KEY keymap, CY_KEY *invkey);
+} CY_OWNERSHIP_FLAG;
+
+typedef struct CY_Residu64 
+{
+
+    uint64_t value;
+    uint64_t mod;
+
+} CY_Residu64;
+
+typedef struct CY_String 
+{
+    
+    uint8_t *str; 
+    size_t size; 
+    CY_OWNERSHIP_FLAG owner;
+
+} CY_String, CY_KEY;
+
+typedef CY_STATE_FLAG (*CY_FUNC)
+(
+
+    const CY_String file, 
+    CY_KEY *key, 
+    uint8_t **buffer
+    
+);
+
+/************************* linear Key Functions ***************************/
+
+CY_STATE_FLAG cy_key_linear_direct_generate(const uint8_t start, const uint8_t end, CY_KEY *key);
+
+CY_STATE_FLAG CY_key_linear_rand_generated(const uint8_t start, const uint8_t end, CY_KEY *key);
+
+CY_STATE_FLAG cy_key_linear_inverse_generated(const uint8_t start, const uint8_t end, const CY_KEY mapkey, const CY_KEY key, CY_KEY *invkey);
+
+CY_STATE_FLAG cy_key_import(const char *inpath, CY_KEY *key);
+
+CY_STATE_FLAG cy_key_export(const CY_KEY key, const char *outpath);
+
 
 /**************************** Cypher Functions ****************************/
 
 CY_STATE_FLAG cypher(const char *inpath, CY_KEY *key, const CY_FUNC cypherfunc, const char *outpath);
 
-CY_STATE_FLAG CY_encryption_caesar(const CY_String file, CY_KEY *key, uint8_t **buffer);
+CY_STATE_FLAG cy_encryption_caesar(const CY_String file, const CY_KEY *key, uint8_t **buffer);
 
-CY_STATE_FLAG CY_decryption_caesar(const CY_String file, CY_KEY *key, uint8_t **buffer);
+CY_STATE_FLAG cy_decryption_caesar(const CY_String file, const CY_KEY *key, uint8_t **buffer);
 
-CY_STATE_FLAG CY_encryption_monoalphabetic(const CY_String file, CY_KEY *key, uint8_t **buffer);
+CY_STATE_FLAG cy_encryption_monoalpahbetic(const CY_String file, const CY_KEY *key, uint8_t **buffer);
 
-CY_STATE_FLAG CY_decryption_monoalphabetic(const CY_String file, CY_KEY *key, uint8_t **buffer);
+CY_STATE_FLAG cy_decryption_monoalpahbetic(const CY_String file, const CY_KEY *key, uint8_t **buffer);
 
-CY_STATE_FLAG CY_crack_monoalphabetic(const CY_String file, CY_KEY *key, uint8_t **buffer);
+CY_STATE_FLAG cy_crack_monoalpahbetic(const CY_String file, CY_KEY *key, uint8_t **buffer);
 
-CY_STATE_FLAG CY_encryption_EASCII(const CY_String file, CY_KEY *key, uint8_t **buffer);
+CY_STATE_FLAG cy_encryption_eascii(const CY_String file, const CY_KEY *key, uint8_t **buffer);
 
-CY_STATE_FLAG CY_decryption_EASCII(const CY_String file, CY_KEY *key, uint8_t **buffer);
+CY_STATE_FLAG cy_decryption_eascii(const CY_String file, const CY_KEY *key, uint8_t **buffer);
 
 #endif // __CYPHER_KEYS__

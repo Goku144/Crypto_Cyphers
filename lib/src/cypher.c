@@ -23,6 +23,53 @@
 
 
 
+ /******************************************************** 
+ * 
+ * 
+ * 
+ * 
+ *                     ERROR Functions 
+ *
+ * 
+ * 
+ * 
+ *********************************************************/
+
+
+
+
+static CY_STATE_FLAG cy_err_manager(const CY_STATE_FLAG e, const char *funcname, const char *msg){
+    switch(e)
+    {
+    case CY_OK: return CY_OK;
+    case CY_ERR: return CY_ERR;
+    case CY_ERR_ARG: fprintf(stderr,"%s(-> ERROR(-> invalid argument <-)%s <-)\n", funcname, msg); return CY_ERR;
+    case CY_ERR_STATE: fprintf(stderr,"%s(-> ERROR(-> bad state/order <-)%s <-)\n", funcname, msg); return CY_ERR;
+    case CY_ERR_UNSUPPORTED: fprintf(stderr,"%s(-> ERROR(-> unsupported <-)%s <-)\n", funcname, msg); return CY_ERR;
+    case CY_ERR_NOT_IMPL: fprintf(stderr,"%s(-> ERROR(-> not implemented <-)%s <-)\n", funcname, msg); return CY_ERR;
+    case CY_ERR_INTERNAL: fprintf(stderr,"%s(-> ERROR(-> internal error <-)%s <-)\n", funcname, msg); return CY_ERR;
+    case CY_ERR_OOM: fprintf(stderr,"%s(-> ERROR(-> out of memory <-)%s <-)\n", funcname, msg); return CY_ERR;
+    case CY_ERR_SPACE: fprintf(stderr,"%s(-> ERROR(-> insufficient output buffer <-)%s <-)\n", funcname, msg); return CY_ERR;
+    case CY_ERR_SIZE: fprintf(stderr,"%s(-> ERROR(-> invalid size <-)%s <-)\n", funcname, msg); return CY_ERR;
+    case CY_ERR_OVERLAP: fprintf(stderr,"%s(-> ERROR(-> buffer overlap <-)%s <-)\n", funcname, msg); return CY_ERR;
+    case CY_ERR_IO: fprintf(stderr,"%s(-> ERROR(-> I/O error <-)%s <-)\n", funcname, msg); return CY_ERR;
+    case CY_ERR_EOF: fprintf(stderr,"%s(-> ERROR(-> unexpected EOF <-)%s <-)\n", funcname, msg); return CY_ERR;
+    case CY_ERR_OPEN: fprintf(stderr,"%s(-> ERROR(-> open failed <-)%s <-)\n", funcname, msg); return CY_ERR;
+    case CY_ERR_CLOSE: fprintf(stderr,"%s(-> ERROR(-> close failed <-)%s <-)\n", funcname, msg); return CY_ERR;
+    case CY_ERR_FORMAT: fprintf(stderr,"%s(-> ERROR(-> format parse error <-)%s <-)\n", funcname, msg); return CY_ERR;
+    case CY_ERR_VALUE: fprintf(stderr,"%s(-> ERROR(-> invalid value <-)%s <-)\n", funcname, msg); return CY_ERR;
+    case CY_ERR_RANGE: fprintf(stderr,"%s(-> ERROR(-> out of range <-)%s <-)\n", funcname, msg); return CY_ERR;
+    case CY_ERR_RNG: fprintf(stderr,"%s(-> ERROR(-> rng failure <-)%s <-)\n", funcname, msg); return CY_ERR;
+    case CY_ERR_KEY: fprintf(stderr,"%s(-> ERROR(-> key error <-)%s <-)\n", funcname, msg); return CY_ERR;
+    case CY_ERR_KEY_SIZE: fprintf(stderr,"%s(-> ERROR(-> key size invalid <-)%s <-)\n", funcname, msg); return CY_ERR;
+    case CY_ERR_KEY_VALUE: fprintf(stderr,"%s(-> ERROR(-> key content invalid <-)%s <-)\n", funcname, msg); return CY_ERR;
+    default: fprintf(stderr,"%s(-> ERROR(-> unknown error <-)%s <-)\n", funcname, msg); return CY_ERR;
+    }
+}
+
+
+
+
 /******************************************************** 
  * 
  * 
@@ -41,7 +88,7 @@
 #define DECL_RANDOM_UNIFORM_UNSIGNED(T, name)                                                                           \
 static CY_STATE_FLAG name(const T n, T *out)                                                                            \
 {                                                                                                                       \
-    if (!out || n == 0) return CY_ERROR;                                                                                \
+    if (!out || n == 0) return CY_ERR;                                                                                  \
                                                                                                                         \
     const T max = (T)~(T)0; /* 2^w - 1 */                                                                               \
                                                                                                                         \
@@ -50,9 +97,9 @@ static CY_STATE_FLAG name(const T n, T *out)                                    
     for (;;)                                                                                                            \
     {                                                                                                                   \
         NTSTATUS st = BCryptGenRandom(NULL, (PUCHAR)out, (ULONG)sizeof(T), BCRYPT_USE_SYSTEM_PREFERRED_RNG);            \
-        if (st != 0) return CY_ERROR;                                                                                   \
+        if (st != 0) return CY_ERR;                                                                                     \
         if (*out < lim)                                                                                                 \
-        {*out = (T)(*out % n); return CY_NORMAL;}                                                                       \
+        {*out = (T)(*out % n); return CY_OK;}                                                                           \
     }                                                                                                                   \
 }
 
@@ -77,7 +124,7 @@ DECL_RANDOM_UNIFORM_UNSIGNED(__uint128_t, random_u128)
 
 
 
-uint64_t gcd(uint64_t a, uint64_t b)
+static uint64_t gcd(uint64_t a, uint64_t b)
 {
     if(!a) return b;
     if(!b) return a;
@@ -91,10 +138,10 @@ uint64_t gcd(uint64_t a, uint64_t b)
     return a;
 }
 
-CY_STATE_FLAG EEA(uint64_t a, uint64_t n, uint64_t *out)
+static CY_STATE_FLAG EEA(uint64_t a, uint64_t n, uint64_t *out)
 {
     if(gcd(a,n) != 1) 
-    {fprintf(stderr, "gcd(%"PRIu64",%"PRIu64") is different than 1\n", a, n); return CY_ERROR;}
+    {fprintf(stderr, "gcd(%"PRIu64",%"PRIu64") is different than 1\n", a, n); return CY_ERR;}
 
     // __t represent t-2 and _t represent t-1
     __int128_t __x = 1, _x = 0, mod = n;
@@ -109,21 +156,21 @@ CY_STATE_FLAG EEA(uint64_t a, uint64_t n, uint64_t *out)
 
     *out = (mod + (__x % mod)) % mod;
 
-    return CY_NORMAL;
+    return CY_OK;
 }
 
-CY_STATE_FLAG MRA(const uint64_t n, CY_PRIMALITY_FLAG *out)
+static CY_STATE_FLAG MRA(const uint64_t n, CY_PRIMALITY_FLAG *out)
 {
     *out = CY_INCONCLUSIVE;
 
     if(n < 3) 
-    {fprintf(stderr, "%"PRIu64" < 3, decomposition condition unsatisfied.\n", n); return CY_ERROR;}
+    {fprintf(stderr, "%"PRIu64" < 3, decomposition condition unsatisfied.\n", n); return CY_ERR;}
 
-    if(!(n % 2) || n == 3) return CY_NORMAL;
+    if(!(n % 2) || n == 3) return CY_OK;
 
     __uint128_t a = n - 2;
 
-    if(random_u128((uint64_t)(n - 1), &a) == CY_ERROR) return CY_ERROR;
+    if(random_u128((uint64_t)(n - 1), &a) == CY_ERR) return CY_ERR;
 
     if(a < 2) a += 2; // 1 < a < n - 1
 
@@ -144,33 +191,33 @@ CY_STATE_FLAG MRA(const uint64_t n, CY_PRIMALITY_FLAG *out)
         odd >>= 1;
     }
 
-    if(a_q == 1) return CY_NORMAL;
+    if(a_q == 1) return CY_OK;
 
     for (__uint128_t i = 0; i < power; i++)
     {
-        if (a_q == (__uint128_t) (n - 1)) return CY_NORMAL;
+        if (a_q == (__uint128_t) (n - 1)) return CY_OK;
         a_q = (a_q * a_q) % n;
     }
 
     *out = CY_COMPOSITE;
 
-    return CY_NORMAL;
+    return CY_OK;
 }
 
-CY_STATE_FLAG EMRA(const uint64_t n, const uint64_t prob, CY_PRIMALITY_FLAG *out)
+static CY_STATE_FLAG EMRA(const uint64_t n, const uint64_t prob, CY_PRIMALITY_FLAG *out)
 {
-    if (MRA(n,out) == CY_ERROR) return CY_ERROR;
+    if (MRA(n,out) == CY_ERR) return CY_ERR;
 
     for (__uint128_t i = 0; i < prob; i++) MRA(n,out);
 
-    return CY_NORMAL;  
+    return CY_OK;  
 }
 
-CY_STATE_FLAG CRT(const CY_Residu64 a[], const uint64_t size, uint64_t *out)
+static CY_STATE_FLAG CRT(const CY_Residu64 a[], const uint64_t size, uint64_t *out)
 {
     *out = 0;
     if(!size) 
-    {fprintf(stderr, "Can't have null size"); return CY_ERROR;}
+    {fprintf(stderr, "Can't have null size"); return CY_ERR;}
 
     uint64_t M = 1;
 
@@ -179,15 +226,15 @@ CY_STATE_FLAG CRT(const CY_Residu64 a[], const uint64_t size, uint64_t *out)
     for (uint64_t i = 0; i < size; i++)
     {
         if(!a[i].mod)
-        {fprintf(stderr, "Can't have null modulos"); return CY_ERROR;}
+        {fprintf(stderr, "Can't have null modulos"); return CY_ERR;}
 
         uint64_t gcd_v = gcd(a[i].mod,M);
 
         if(gcd_v != 1)
-        {fprintf(stderr, "gcd(%"PRIu64",%"PRIu64") = %"PRIu64" CRT condition not meet\n", a[i].mod, (uint64_t) M, gcd_v); return CY_ERROR;}
+        {fprintf(stderr, "gcd(%"PRIu64",%"PRIu64") = %"PRIu64" CRT condition not meet\n", a[i].mod, (uint64_t) M, gcd_v); return CY_ERR;}
 
         // check if M has overflowed
-        if(M > UINT64_MAX / a[i].mod) return CY_ERROR;
+        if(M > UINT64_MAX / a[i].mod) return CY_ERR;
         M *= a[i].mod;    
     }
 
@@ -198,7 +245,7 @@ CY_STATE_FLAG CRT(const CY_Residu64 a[], const uint64_t size, uint64_t *out)
         uint64_t Mi = M / a[i].mod;
         uint64_t Mi_inv = 0;
 
-        if(EEA((uint64_t) Mi, a[i].mod, &Mi_inv) == CY_ERROR) return CY_ERROR;
+        if(EEA((uint64_t) Mi, a[i].mod, &Mi_inv) == CY_ERR) return CY_ERR;
         
         __uint128_t t = (Mi * Mi_inv) % M;
         t = (t * (a[i].value % a[i].mod)) % M;
@@ -207,7 +254,7 @@ CY_STATE_FLAG CRT(const CY_Residu64 a[], const uint64_t size, uint64_t *out)
 
     *out = A % M;
 
-    return CY_NORMAL;
+    return CY_OK;
 }
 
 
@@ -228,133 +275,149 @@ CY_STATE_FLAG CRT(const CY_Residu64 a[], const uint64_t size, uint64_t *out)
 
 
 
-static CY_STATE_FLAG openFile(const char *path, FILE **fp, const char * _Mode)
+static CY_STATE_FLAG open_file(FILE **fp, const char *mode, const char *path)
 {
-    if(fp) *fp = NULL;
-    if (!path || !fp) return CY_ERROR;
-    
-    *fp = fopen(path, _Mode);
+    if(!fp) return cy_err_manager(CY_ERR_ARG, __func__, ": fp is NULL");
+    if(!mode || !*mode) return cy_err_manager(CY_ERR_ARG, __func__, ": mode is NULL/empty");
+    if(!path || !*path) return cy_err_manager(CY_ERR_ARG, __func__, ": path is NULL/empty");
 
-    if (!*fp)
-    {perror("fopen"); return CY_ERROR;}
+    *fp = NULL; *fp = fopen(path, mode);
+    if(!*fp) {perror("fopen"); return cy_err_manager(CY_ERR_OPEN, __func__, "");}
 
-    return CY_NORMAL;
+    return CY_OK;
 }
 
-static CY_STATE_FLAG sizeFile(FILE *fp, size_t *size)
+static CY_STATE_FLAG size_file(FILE *fp, size_t *size)
 {
-    if (!fp || !size) return CY_ERROR;
+    if (!fp) return cy_err_manager(CY_ERR_ARG, __func__, ": fp is NULL");
+    if(!size) return cy_err_manager(CY_ERR_ARG, __func__, ": size is NULL");
     
     if (_fseeki64(fp, 0, SEEK_END) != 0)
-    {perror("_fseeki64(END)"); return CY_ERROR;}
+    {perror("_fseeki64(END)"); return cy_err_manager(CY_ERR_IO, __func__, ": seek end failed");}
 
     __int64  fs = _ftelli64(fp);
     if (fs < 0) 
-    {perror("_ftelli64"); return CY_ERROR;}
+    {perror("_ftelli64"); return cy_err_manager(CY_ERR_IO, __func__, ": tell failed");}
 
-    if ((uintmax_t) fs > (uintmax_t)SIZE_MAX) 
-    {fprintf(stderr, "sizeFile: too large for size_t\n"); return CY_ERROR;}
+    if ((uintmax_t) fs > (uintmax_t) SIZE_MAX) return cy_err_manager(CY_ERR_SIZE, __func__, "file too large for size_t");
 
     if (_fseeki64(fp, 0, SEEK_SET) != 0)
-    {perror("_fseeki64(START)"); return CY_ERROR;}
+    {perror("_fseeki64(SET)"); return cy_err_manager(CY_ERR_IO, __func__, "rewind failed");}
 
     *size = (size_t) fs;
-    return CY_NORMAL;
+    return CY_OK;
 }
 
-static CY_STATE_FLAG readFile(FILE *fp, uint8_t *dst, const size_t size) 
+static CY_STATE_FLAG malloc_space(void **memp, const size_t size)
 {
-    if (!fp || (!dst && size)) return CY_ERROR;
-
-    size_t offset = 0;
-    while (offset < size) 
-    {
-        size_t n = fread(dst + offset, 1, size - offset, fp);
-
-        if (n == 0)
-        {if (ferror(fp)) perror("fread"); else fprintf(stderr, "fread: unexpected EOF\n"); return CY_ERROR;}
-
-        offset += n;
-    }
-    return CY_NORMAL;
-}
-
-static CY_STATE_FLAG writeFile(FILE *fp, const uint8_t *src, const size_t size) 
-{
-    if (!fp || (!src && size)) return CY_ERROR;
-
-    size_t offset = 0;
-    while (offset < size) 
-    {
-        size_t n = fwrite(src + offset, 1, size - offset, fp);
-        if (n == 0) 
-        {perror("fwrite"); return CY_ERROR;}
-        offset += n;
-    }
-    return CY_NORMAL;
-}
-
-static CY_STATE_FLAG closeFile(FILE *fp)
-{
-    if (!fp) return CY_NORMAL;
-
-    if (fclose(fp) != 0) 
-    {perror("fclose"); return CY_ERROR;}
-
-    return CY_NORMAL;
-}
-
-static CY_STATE_FLAG mallocSpace(void **memp, const size_t size)
-{
-    if (!memp) return CY_ERROR;
+    if (!memp) return cy_err_manager(CY_ERR_ARG, __func__, ": memp is NULL");
+    if (!size) return cy_err_manager(CY_ERR_ARG, __func__, ": size is 0");
 
     *memp = NULL;
-    *memp = malloc(size ? size : 1);
+    *memp = malloc(size);
 
     if (!*memp) 
-    {perror("malloc"); return CY_ERROR;}
+    {perror("malloc"); return cy_err_manager(CY_ERR_OOM, __func__, ": malloc faild to allocate space");}
 
-    return CY_NORMAL;
+    return CY_OK;
 }
 
-static void freeFile(CY_String *file)
+static CY_STATE_FLAG free_space(CY_String *file)
 {
-    if (!file) return;
+    if (!file || !file->str) return cy_err_manager(CY_ERR_ARG, __func__, ": file/file->str is NULL");
 
     if (file->owner == CY_OWNED) free(file->str);
 
-    file->str = NULL;
+    file->str = NULL; file->owner = CY_NOT_OWNED; file->size = 0;
 
-    file->owner = CY_NOT_OWNED;
-
-    file->size = 0;
+    return CY_OK;
 }
 
-static CY_STATE_FLAG extractFile(const char *path, CY_String *buffer)
+static CY_STATE_FLAG read_file(FILE *fp, void *dst, const size_t size)
+{
+    if (!fp) return cy_err_manager(CY_ERR_ARG, __func__, ": fp is NULL");
+    if (!dst) return cy_err_manager(CY_ERR_ARG, __func__, ": dst is NULL");
+    if (!size) return CY_OK;
+
+    uint8_t *p = (uint8_t *)dst;
+    size_t offset = 0;
+
+    while (offset < size) 
+    {
+        size_t n = fread(p + offset, 1, size - offset, fp);
+
+        if (n == 0)
+        {
+            if (ferror(fp)) 
+            {perror("fread"); return cy_err_manager(CY_ERR_IO, __func__, ": fread faild to read the full file");} 
+            
+            return cy_err_manager(CY_ERR_EOF, __func__, ": fread stopped unexpectedly");
+        }
+
+        offset += n;
+    }
+    return CY_OK;
+}
+
+static CY_STATE_FLAG write_file(FILE *fp, const void *src, const size_t size)
+{
+    if (!fp) return cy_err_manager(CY_ERR_ARG, __func__, ": fp is NULL");
+    if (!src) return cy_err_manager(CY_ERR_ARG, __func__, ": src is NULL");
+    if (!size) return CY_OK;
+
+    uint8_t *p = (uint8_t *)src;
+    size_t offset = 0;
+
+    while (offset < size) 
+    {
+        size_t n = fwrite(p + offset, 1, size - offset, fp);
+        if (n == 0) 
+        {
+            if (ferror(fp)) 
+            {perror("fwrite"); return cy_err_manager(CY_ERR_IO, __func__, ": fwrite faild to write the full file");} 
+
+            return cy_err_manager(CY_ERR_INTERNAL, __func__, ": fwrite made no progress");
+        }
+        offset += n;
+    }
+    return CY_OK;
+}
+
+static CY_STATE_FLAG close_file(FILE *fp)
+{
+    if (!fp) return cy_err_manager(CY_ERR_ARG, __func__, ": fp is NULL");
+
+    if (fclose(fp) != 0) 
+    {perror("fclose"); return cy_err_manager(CY_ERR_CLOSE, __func__, ": fclose faild to close fp");}
+
+    return CY_OK;
+}
+
+static CY_STATE_FLAG extract_file(const char *path, CY_String *buffer)
 {
     FILE *fp = NULL; *buffer = (CY_String) {NULL, 0, CY_NOT_OWNED};
 
-    if(openFile(path, &fp, "rb") == CY_ERROR) return CY_ERROR;
+    if(open_file(&fp, "rb", path) == CY_ERR) return CY_ERR;
 
     size_t size = 0;
 
-    if(sizeFile(fp, &size) == CY_ERROR) 
-    {closeFile(fp); return CY_ERROR;}
+    if(size_file(fp, &size) == CY_ERR) 
+    {close_file(fp); return CY_ERR;}
 
     uint8_t *memp;
-    if(mallocSpace((void **) &memp, size + 1) == CY_ERROR) 
-    {closeFile(fp); return CY_ERROR;}
+    if(malloc_space((void **) &memp, size + 1) == CY_ERR) 
+    {close_file(fp); return CY_ERR;}
 
-    if(readFile(fp, memp, size) == CY_ERROR) 
-    {closeFile(fp); free(memp); return CY_ERROR;}
+    if(read_file(fp, memp, size) == CY_ERR) 
+    {close_file(fp); free(memp); return CY_ERR;}
     
-    if(closeFile(fp) == CY_ERROR)
-    {free(memp); return CY_ERROR;}
+    if(close_file(fp) == CY_ERR)
+    {free(memp); return CY_ERR;}
 
     *buffer = (CY_String){.str = memp, .size = size, .owner = CY_OWNED};
     buffer->str[size] = '\0';
 
-    return CY_NORMAL;
+    return CY_OK;
 }
 
 
@@ -372,7 +435,7 @@ static CY_STATE_FLAG extractFile(const char *path, CY_String *buffer)
  * 
  * 
  * 
- *                      Key Functions 
+ *                    check Functions 
  *
  * 
  * 
@@ -382,105 +445,55 @@ static CY_STATE_FLAG extractFile(const char *path, CY_String *buffer)
 
 
 
-CY_STATE_FLAG CY_GENERATE_key(const uint8_t start, const uint8_t end, CY_KEY *key)
+static CY_STATE_FLAG cy_key_linear_check_direct_generate(const uint8_t start, const uint8_t end, const CY_KEY *key)
 {
-    if(key->owner == CY_OWNED || key->str != NULL || key->size != 0) 
-    {fprintf(stderr, "CY_GENERATE_key(-> KEY_ERROR: the key is (owned, not empty or size is not 0) <-)\n"); return CY_ERROR;} 
-
-    if(start > end)
-    {fprintf(stderr, "CY_GENERATE_key(-> SIZE_ERROR: negative size not allowed (end must be greater than start) <-)\n"); return CY_ERROR;}
-
-    if(mallocSpace((void **) &key->str, (end - start + 1) * sizeof(uint8_t)) == CY_ERROR) return CY_ERROR;
-
-    key->owner = CY_OWNED; key->size = end - start + 1; 
-    
-    for (uint16_t i = 0; i < key->size; i++) key->str[i] = (uint8_t) (i + start);
-
-    return CY_NORMAL;
+    if(start > end) return cy_err_manager(CY_ERR_ARG, __func__, ": start is greater than end");
+    if(key->str || key->owner == CY_OWNED) return cy_err_manager(CY_ERR_ARG, __func__, "key is owned");
+    return CY_OK;
 }
 
-CY_STATE_FLAG CY_SHIFT_key(const uint8_t start, const uint8_t end, const CY_KEY *key, CY_String buffer)
+static CY_STATE_FLAG cy_key_linear_check_rand_generated(const uint8_t start, const uint8_t end, const CY_KEY *key)
 {
-    if(key->owner == CY_NOT_OWNED || key->str == NULL || key->size != 2) 
-    {fprintf(stderr, "CY_SHIFT_key(-> KEY_ERROR: the key is (not owned, empty or size (end - start + 1) is greater then the key size) <-)\n"); return CY_ERROR;}
-
-    if(start > end)
-    {fprintf(stderr, "CY_SHIFT_key(-> SIZE_ERROR: negative size not allowed (end must be greater than start) <-)\n"); return CY_ERROR;}
-
-    uint8_t keya = key->str[0], keyb = key->str[1];
-    uint16_t mod = (end - start + 1);
-
-    keya %= mod; keyb %= mod;
-
-    if(gcd(keya, mod) != 1)
-    {fprintf(stderr, "gcd(%"PRIu8",%"PRIu16") is different than 1\n", keya, mod); return CY_ERROR;}
-
-    for (size_t i = 0; i < buffer.size; i++)
-    {
-        char c = buffer.str[i];
-        c = (c >= start && c <= end) ? (char) ((keya * (c - start) + keyb) % mod + start) : c;
-        buffer.str[i] = c;
-    }
-    return CY_NORMAL;
+    if(start > end) return cy_err_manager(CY_ERR_ARG, __func__, ": start is greater than end");
+    if(!key->str || key->owner == CY_NOT_OWNED || !key->size) return cy_err_manager(CY_ERR_ARG, __func__, "key is not owned");
+    uint16_t size = (end - start + 1);
+    if(key->size < size) return cy_err_manager(CY_ERR_KEY_SIZE, __func__, ": key size is less then the start to end size");
+    return CY_OK;
 }
 
-CY_STATE_FLAG CY_INVSHIFT_key(const uint8_t start, const uint8_t end, const CY_KEY *key, CY_String buffer)
+static CY_STATE_FLAG cy_key_linear_check_inverse_generated(const uint8_t start, const uint8_t end, const CY_KEY mapkey, const CY_KEY key, const CY_KEY *invkey)
 {
-    if(key->owner == CY_NOT_OWNED || key->str == NULL || key->size != 2) 
-    {fprintf(stderr, "CY_SHIFT_key(-> KEY_ERROR: the key is (not owned, empty or size (end - start + 1) is greater then the key size) <-)\n"); return CY_ERROR;}
-
-    if(buffer.owner == CY_NOT_OWNED || buffer.str == NULL || buffer.size == 0) 
-    {fprintf(stderr, "CY_SHIFT_key(-> BUFFER_ERROR: the buffer is (not owned, empty or size is 0 <-)\n"); return CY_ERROR;}
-
-    if(start > end)
-    {fprintf(stderr, "CY_SHIFT_key(-> SIZE_ERROR: negative size not allowed (end must be greater than start) <-)\n"); return CY_ERROR;}
-
-    uint16_t mod = (end - start + 1);
-    uint64_t keya, keyb = key->str[1];
-
-    if(EEA(key->str[0], mod, &keya) == CY_ERROR) return CY_ERROR;
-
-    for (size_t i = 0; i < buffer.size; i++)
-    {
-        char c = buffer.str[i];
-        buffer.str[i] = (c >= start && c <= end) ? (uint8_t) ((keya * (mod + (c - start) - keyb % mod)) % mod + start) : c;
-    }
-    return CY_NORMAL;
+    if(start > end) return cy_err_manager(CY_ERR_ARG, __func__, ": start is greater than end");
+    if(!mapkey.str || mapkey.owner == CY_NOT_OWNED || !mapkey.size) return cy_err_manager(CY_ERR_ARG, __func__, ": mapkey is NULL, not owned or size is 0");
+    if(!key.str || key.owner == CY_NOT_OWNED || !key.size) return cy_err_manager(CY_ERR_ARG, __func__, ": key is NULL, not owned or size is 0");
+    if(invkey->str || invkey->owner == CY_OWNED || invkey->size) return cy_err_manager(CY_ERR_ARG, __func__, ": invkey is not NULL, owned, or size is not 0");
+    uint16_t size = (end - start + 1);
+    if(key.size < size) return cy_err_manager(CY_ERR_KEY_SIZE, __func__, ": key size is less than the start to end size");
+    if(key.size != mapkey.size) return cy_err_manager(CY_ERR_KEY_SIZE, __func__, ": key and mapkey have deffrent sizes");
+    for(uint16_t i = 0; i < size; i++) if(key.str[i] < start) return cy_err_manager(CY_ERR_KEY, __func__, ": one of the key value is smaller than start value");
+    return CY_OK;
 }
 
-CY_STATE_FLAG CY_RAND_key(const uint8_t start, const uint8_t end, CY_KEY *key)
+static CY_STATE_FLAG cy_check_caesar(const CY_KEY key)
 {
-    if(key->owner == CY_NOT_OWNED || key->str == NULL || key->size < (size_t) (end - start + 1)) 
-    {fprintf(stderr, "CY_RAND_key(-> KEY_ERROR: the key is (not owned, empty or size (end - start + 1) is greater then the key size) <-)\n"); return CY_ERROR;}
-
-    if(start > end)
-    {fprintf(stderr, "CY_RAND_key(-> SIZE_ERROR: negative size not allowed (end must be greater than start) <-)\n"); return CY_ERROR;}
-
-    for (uint16_t i = start; i <= end; i++)
-    {
-        uint16_t count = (uint16_t) (end - i + 1);
-        uint16_t r; if(random_u16(count, &r) == CY_ERROR) {return CY_ERROR;} r+= (i - start);
-        uint8_t tmp = key->str[(uint8_t) (i - start)]; key->str[(uint8_t) (i - start)] = key->str[(uint8_t) r]; key->str[(uint8_t) r] = tmp;
-    }
-
-    return CY_NORMAL;
+    if(!key.str || key.owner == CY_NOT_OWNED || key.size != 2) return cy_err_manager(CY_ERR_ARG, __func__, ": key is NULL, not owned or size is not 2");
+    if(gcd(key.str[0], 26) != 1) return cy_err_manager(CY_ERR_KEY, __func__, ": gcd of a and 26 is not 1 (key = (->a<-,b))");
+    return CY_OK;
 }
 
-CY_STATE_FLAG CY_INVERSE_key(const uint8_t start, const uint8_t end, CY_KEY key, CY_KEY keymap, CY_KEY *invkey)
+static CY_STATE_FLAG cy_check_monoalpahbetic(const CY_KEY key)
 {
-    if(key.owner == CY_NOT_OWNED || key.str == NULL || key.size < (size_t) (end - start + 1)) 
-    {fprintf(stderr, "CY_INVERSE_key(-> KEY_ERROR: the key is (not owned, empty or size (end - start + 1) is greater then the key size)<-)\n"); return CY_ERROR;}
+    if(!key.str || key.owner == CY_NOT_OWNED || key.size != 26) return cy_err_manager(CY_ERR_ARG, __func__, ": key is NULL, not owned or size is not 26");
+    for (uint16_t i = 0; i < 26; i++) 
+        if(!((key.str[i] >= 'a' && key.str[i] <= 'z') || (key.str[i] >= 'A' && key.str[i] <= 'Z')))
+            return cy_err_manager(CY_ERR_KEY, __func__, ": key has value that are not letter");
+    return CY_OK;
+}
 
-    if(keymap.owner == CY_NOT_OWNED || keymap.str == NULL || keymap.size != key.size) 
-    {fprintf(stderr, "CY_INVERSE_key(-> KEY_ERROR: the keymap is (not owned, empty or size is diffrent then the key <-)\n"); return CY_ERROR;}
-
-    if(mallocSpace((void **) &invkey->str, key.size * sizeof(uint8_t)) == CY_ERROR) return CY_ERROR; 
-
-    invkey->owner = CY_OWNED; invkey->size = key.size;
-
-    for (uint16_t i = 0; i < (uint16_t) invkey->size; i++) invkey->str[key.str[i] - start] = keymap.str[i];
-
-    return CY_NORMAL;
+static CY_STATE_FLAG cy_check_eascii(const CY_KEY key)
+{
+    if(!key.str || key.owner == CY_NOT_OWNED || key.size != 256) return cy_err_manager(CY_ERR_ARG, __func__, ": key is NULL, not owned or size is not 256");
+    return CY_OK;
 }
 
 
@@ -491,7 +504,7 @@ CY_STATE_FLAG CY_INVERSE_key(const uint8_t start, const uint8_t end, CY_KEY key,
  * 
  * 
  * 
- *                    ASCII Functions 
+ *                  linear Key Functions 
  *
  * 
  * 
@@ -501,44 +514,53 @@ CY_STATE_FLAG CY_INVERSE_key(const uint8_t start, const uint8_t end, CY_KEY key,
 
 
 
-static CY_STATE_FLAG CY_NORMAL_EASCII(const uint8_t start, const uint8_t end, CY_String file, CY_KEY *key, uint8_t **buffer)
-{   
-    for (size_t i = 0; i < file.size; i++)
-    {
-        uint8_t c = file.str[i];
-        (*buffer)[i] = (c >= start && c <= end) ? key->str[c - start] : c;
-    }
-    return CY_NORMAL;
-}
-
-static CY_STATE_FLAG CY_FREQUENT_EASCII(const uint8_t start, const uint8_t end, CY_String file, size_t *numtable)
-{   
-    for (size_t i = 0; i < file.size; i++)
-    {
-        uint8_t c = file.str[i];
-        if(c >= start && c <= end) numtable[c - start]++;
-    }
-    return CY_NORMAL;
-}
-
-static CY_STATE_FLAG CY_NORMAL_ABC(const CY_String file, CY_KEY *key, uint8_t **buffer)
+CY_STATE_FLAG cy_key_linear_direct_generate(const uint8_t start, const uint8_t end, CY_KEY *key)
 {
-    if(CY_NORMAL_EASCII('a', 'z', file, key, buffer) == CY_ERROR) return CY_ERROR;
-
-    for (size_t i = 0; i < key->size; i++) key->str[i] = key->str[i] - 'a' + 'A';
-
-    if(CY_NORMAL_EASCII('A', 'Z', (CY_String) {.owner=file.owner, .size=file.size, .str=(*buffer)}, key, buffer) == CY_ERROR) return CY_ERROR;
-
-    for (size_t i = 0; i < key->size; i++) key->str[i] = key->str[i] - 'A' + 'a';
-
-    return CY_NORMAL;
+    if(cy_key_linear_check_direct_generate(start, end, key) == CY_ERR) return CY_ERR;
+    uint16_t size = (end - start + 1);
+    if(malloc_space((void **) &key->str, size) == CY_ERR) return CY_ERR;
+    for (uint16_t i = 0; i < size; i++) key->str[i] =  (i + start);
+    key->owner = CY_OWNED; key->size = size;
+    return CY_OK;
 }
 
-static CY_STATE_FLAG CY_FREQUENT_ABC(const CY_String file, size_t *numtable)
+CY_STATE_FLAG CY_key_linear_rand_generated(const uint8_t start, const uint8_t end, CY_KEY *key)
 {
-    if(CY_FREQUENT_EASCII('a', 'z', file, numtable) == CY_ERROR) return CY_ERROR;
+    if(cy_key_linear_check_rand_generated(start, end, key) == CY_ERR) return CY_ERR;
+    for (uint16_t i = start; i <= end; i++)
+    {
+        uint16_t count = (uint16_t) (end - i + 1);
+        uint16_t r; if(random_u16(count, &r) == CY_ERR) {return CY_ERR;} r+= (i - start);
+        uint8_t tmp = key->str[(uint8_t) (i - start)]; key->str[(uint8_t) (i - start)] = key->str[(uint8_t) r]; key->str[(uint8_t) r] = tmp;
+    }
+    key->owner = CY_OWNED; key->size = (end - start + 1);
+    return CY_OK;
+}
 
-    return CY_FREQUENT_EASCII('A', 'Z', file, numtable);
+CY_STATE_FLAG cy_key_linear_inverse_generated(const uint8_t start, const uint8_t end, const CY_KEY mapkey, const CY_KEY key, CY_KEY *invkey)
+{
+    if(cy_key_linear_check_inverse_generated(start, end , mapkey, key, invkey) == CY_ERR) return CY_ERR;
+    uint16_t size = (end - start + 1);
+    if(malloc_space((void **)  &invkey->str, size) == CY_ERR) return CY_ERR;
+    for (uint16_t i = 0; i < size; i++) invkey->str[key.str[i] - start] = mapkey.str[i];
+    invkey->owner = CY_OWNED; invkey->size = size;
+    return CY_OK;
+}
+
+CY_STATE_FLAG cy_key_import(const char *inpath, CY_KEY *key)
+{
+    return extract_file(inpath, key);   
+}
+
+CY_STATE_FLAG cy_key_export(const CY_KEY key, const char *outpath)
+{
+    FILE *fp;
+
+    if(open_file(&fp, "wb", outpath) == CY_ERR) return CY_ERR;
+
+    if(write_file(fp, key.str, key.size) == CY_ERR) {close_file(fp); return CY_ERR;}
+
+    return close_file(fp);   
 }
 
 
@@ -561,101 +583,130 @@ static CY_STATE_FLAG CY_FREQUENT_ABC(const CY_String file, size_t *numtable)
 
 static CY_STATE_FLAG cypherStart(const char *inpath, CY_String *file, uint8_t **buffer)
 {
-    if(extractFile(inpath, file) == CY_ERROR) return CY_ERROR;
+    if(extract_file(inpath, file) == CY_ERR) return CY_ERR;
 
-    if(mallocSpace((void **) buffer, file->size + 1) == CY_ERROR) return CY_ERROR;
+    if(malloc_space((void **) buffer, file->size + 1) == CY_ERR) return CY_ERR;
 
     (*buffer)[file->size] = '\0';
     
-    return CY_NORMAL;
+    return CY_OK;
 }
 
 static CY_STATE_FLAG cypherFinish(const char *outpath, const CY_String file, const uint8_t *buffer)
 {
     FILE *fp;
 
-    if(openFile(outpath, &fp, "wb") == CY_ERROR) return CY_ERROR;
+    if(open_file(&fp, "wb", outpath) == CY_ERR) return CY_ERR;
 
-    if(writeFile(fp, buffer, file.size) == CY_ERROR) {closeFile(fp); return CY_ERROR;}
+    if(write_file(fp, buffer, file.size) == CY_ERR) {close_file(fp); return CY_ERR;}
 
-    if(closeFile(fp) == CY_ERROR) return CY_ERROR;
-
-    return CY_NORMAL;
+    return close_file(fp);
 }
 
 CY_STATE_FLAG cypher(const char *inpath, CY_KEY *key, const CY_FUNC cypherfunc, const char *outpath)
 {
     CY_String file; uint8_t *buffer;
 
-    if(cypherStart(inpath, &file, &buffer) == CY_ERROR) {freeFile(&file); return CY_ERROR;}
+    if(cypherStart(inpath, &file, &buffer) == CY_ERR) {free_space(&file); return CY_ERR;}
 
-    if(cypherfunc(file, key, &buffer) == CY_ERROR) {free(buffer); freeFile(&file); return CY_ERROR;}
+    if(cypherfunc(file, key, &buffer) == CY_ERR) {free(buffer); free_space(&file); return CY_ERR;}
 
-    if(cypherFinish(outpath, file, buffer) == CY_ERROR) {free(buffer); freeFile(&file); return CY_ERROR;}
+    if(cypherFinish(outpath, file, buffer) == CY_ERR) {free(buffer); free_space(&file); return CY_ERR;}
 
-    free(buffer); freeFile(&file);
-
-    return CY_NORMAL;
+    free(buffer); return free_space(&file);
 }
 
-CY_STATE_FLAG CY_encryption_caesar(const CY_String file, CY_KEY *key, uint8_t **buffer)
+CY_STATE_FLAG cy_encryption_caesar(const CY_String file, const CY_KEY *key, uint8_t **buffer)
 {
-    for (size_t i = 0; i < file.size; i++) (*buffer)[i] = file.str[i];
+    if(cy_check_caesar(*key) == CY_ERR) return CY_ERR;
 
-    if(CY_SHIFT_key('a', 'z', key, (CY_String) {.owner=file.owner, .size=file.size, .str=(*buffer)}) == CY_ERROR) return CY_ERROR;
+    uint8_t keya = key->str[0], keyb = key->str[1];
 
-    return CY_SHIFT_key('A', 'Z', key, (CY_String) {.owner=file.owner, .size=file.size, .str=(*buffer)});
-}
+    keya %= 26; keyb %= 26;
 
-CY_STATE_FLAG CY_decryption_caesar(const CY_String file, CY_KEY *key, uint8_t **buffer)
-{
-    for (size_t i = 0; i < file.size; i++) (*buffer)[i] = file.str[i];
-
-    if(CY_INVSHIFT_key('a', 'z', key, (CY_String) {.owner=file.owner, .size=file.size, .str=(*buffer)}) == CY_ERROR) return CY_ERROR;
-    
-    return CY_INVSHIFT_key('A', 'Z', key, (CY_String) {.owner=file.owner, .size=file.size, .str=(*buffer)});
-}
-
-CY_STATE_FLAG CY_encryption_monoalphabetic(const CY_String file, CY_KEY *key, uint8_t **buffer)
-{
-    if(key->owner == CY_NOT_OWNED)
+    for (size_t i = 0; i < file.size; i++)
     {
-        if(CY_GENERATE_key('a', 'z', key) == CY_ERROR) return CY_ERROR;
-
-        if(CY_RAND_key('a', 'z', key) == CY_ERROR) return CY_ERROR;
+        uint8_t c = file.str[i];
+        if((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')) 
+        {
+            uint8_t cas = (c >= 'A' && c <= 'Z') ? 'A' : 'a';
+            c = (uint8_t) ((keya * (c - cas) + keyb) % 26 + cas);
+        }
+        (*buffer)[i] = c;
     }
-
-    if(key->str == NULL) 
-    {fprintf(stderr, "CY_encryption_monoalphabetic(-> KEY_ERROR: the key is owned but its null <-)\n"); return CY_ERROR;}
-
-    return CY_NORMAL_ABC(file, key, buffer);
+    return CY_OK;
 }
 
-CY_STATE_FLAG CY_decryption_monoalphabetic(const CY_String file, CY_KEY *key, uint8_t **buffer)
+CY_STATE_FLAG cy_decryption_caesar(const CY_String file, const CY_KEY *key, uint8_t **buffer)
 {
-    uint8_t keymap[] = "abcdefghijklmnopqrstuvwxyz";
-    
-    if(CY_INVERSE_key('a', 'z', *key, (CY_KEY) {.owner=CY_OWNED, .size=26, .str=keymap}, key) == CY_ERROR) return CY_ERROR;
-    
-    if(CY_NORMAL_ABC(file, key, buffer) == CY_ERROR) return CY_ERROR;
+    if(cy_check_caesar(*key) == CY_ERR) return CY_ERR;
 
-    return CY_INVERSE_key('a', 'z', *key, (CY_KEY) {.owner=CY_OWNED, .size=26, .str=keymap}, key);
+    uint64_t keya, keyb = key->str[1];
+
+    if(EEA(key->str[0], 26, &keya) == CY_ERR) return CY_ERR;
+
+    for (size_t i = 0; i < file.size; i++)
+    {
+        uint8_t c = file.str[i];
+        if((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')) 
+        {
+            uint8_t cas = (c >= 'A' && c <= 'Z') ? 'A' : 'a';
+            c = (uint8_t) ((keya * (26 + (c - cas) - keyb % 26)) % 26 + cas);
+        }
+        (*buffer)[i] = c;
+    }
+    return CY_OK;
 }
 
-CY_STATE_FLAG CY_crack_monoalphabetic(const CY_String file, CY_KEY *key, uint8_t **buffer)
+CY_STATE_FLAG cy_encryption_monoalpahbetic(const CY_String file, const CY_KEY *key, uint8_t **buffer)
 {
-    if(key->owner == CY_OWNED || key->str != NULL || key->size != 0) 
-    {fprintf(stderr, "CY_GENERATE_key(-> KEY_ERROR: the key is (owned, not empty or size is not 0) <-)\n"); return CY_ERROR;}
+    if(cy_check_monoalpahbetic(*key) == CY_ERR) return CY_ERR;
 
-    *key = (CY_KEY) {.owner=CY_OWNED, .size=26, .str=NULL};
-    if(mallocSpace((void **) &key->str, 26) == CY_ERROR) return CY_ERROR;
+    for (size_t i = 0; i < file.size; i++)
+    {
+        uint8_t c = file.str[i];
+        if((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')) 
+        {
+            uint8_t cas = c > 'Z' ? 'a' : 'A';
+            c = key->str[c - cas] > 'Z' ? key->str[c - cas] - 'a' + cas : key->str[c - cas] - 'A' + cas;
+        }
+        (*buffer)[i] = c;
+    }
+    return CY_OK;
+}
 
+CY_STATE_FLAG cy_decryption_monoalpahbetic(const CY_String file, const CY_KEY *key, uint8_t **buffer)
+{
+    if(cy_check_monoalpahbetic(*key) == CY_ERR) return CY_ERR;
+
+    CY_KEY invkey = {.owner=CY_NOT_OWNED, .size=0, .str=NULL};
+    uint8_t abc[] = "abcdefghijklmnopqrstuvwxyz";
+    cy_key_linear_inverse_generated('a','z', (CY_KEY){.owner=CY_OWNED, .size=26, .str=abc}, *key, &invkey);
+    for (size_t i = 0; i < file.size; i++)
+    {
+        uint8_t c = file.str[i];
+        if((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')) 
+        {
+            uint8_t cas = c > 'Z' ? 'a' : 'A';
+            c = invkey.str[c - cas] > 'Z' ? invkey.str[c - cas] - 'a' + cas : invkey.str[c - cas] - 'A' + cas;
+        }
+        (*buffer)[i] = c;
+    }
+    return free_space(&invkey);
+}
+
+CY_STATE_FLAG cy_crack_monoalpahbetic(const CY_String file, CY_KEY *key, uint8_t **buffer)
+{
+    CY_KEY invkey = {.owner=CY_NOT_OWNED, .size=0, .str=NULL};
     size_t numtable[26] = {0};
     uint8_t freqchar[] = "etaoinshrdlcumwfgypbvkjxqz";
     uint8_t chartable[] = "abcdefghijklmnopqrstuvwxyz";
-    
-    if (CY_FREQUENT_ABC(file, numtable) == CY_ERROR) return CY_ERROR;
 
+    for (size_t i = 0; i < file.size; i++)
+    {
+        uint8_t c = file.str[i];
+        if((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')) numtable[(uint8_t) (c - ((c > 'Z') ? 'a' : 'A'))]++;
+    }
     for (size_t i = 0; i < 26; i++)
     {
         size_t k = i;
@@ -666,35 +717,51 @@ CY_STATE_FLAG CY_crack_monoalphabetic(const CY_String file, CY_KEY *key, uint8_t
 
         char tmpchar = chartable[i]; chartable[i] = chartable[k]; chartable[k] = tmpchar;
     }
-    
-    if(CY_INVERSE_key('a', 'z', (CY_KEY) {.owner=CY_OWNED, .size=26, .str=chartable}, (CY_KEY) {.owner=CY_OWNED, .size=26, .str=freqchar}, key) == CY_ERROR) return CY_ERROR;
-    
-    return CY_NORMAL_ABC(file, key, buffer);
+    cy_key_linear_inverse_generated('a','z', (CY_KEY){.owner=CY_OWNED, .size=26, .str=freqchar}, (CY_KEY){.owner=CY_OWNED, .size=26, .str=chartable}, &invkey);
+
+    for (size_t i = 0; i < file.size; i++)
+    {
+        uint8_t c = file.str[i];
+        if((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')) 
+        {
+            uint8_t cas = c > 'Z' ? 'a' : 'A';
+            c = invkey.str[c - cas] > 'Z' ? invkey.str[c - cas] - 'a' + cas : invkey.str[c - cas] - 'A' + cas;
+        }
+        (*buffer)[i] = c;
+    }
+    *key = invkey;
+    return CY_OK;
 }
 
-CY_STATE_FLAG CY_encryption_EASCII(const CY_String file, CY_KEY *key, uint8_t **buffer)
+CY_STATE_FLAG cy_encryption_eascii(const CY_String file, const CY_KEY *key, uint8_t **buffer)
 {
-    if(key->owner == CY_NOT_OWNED)
-    {
-        if(CY_GENERATE_key(0, 255, key) == CY_ERROR) return CY_ERROR;
+    if(cy_check_eascii(*key) == CY_ERR) return CY_ERR;
 
-        if(CY_RAND_key(0, 255, key) == CY_ERROR) return CY_ERROR;
+    for (size_t i = 0; i < file.size; i++)
+    {
+        uint8_t c = file.str[i];
+        c = key->str[c];
+        (*buffer)[i] = c;
     }
 
-    if(key->str == NULL) 
-    {fprintf(stderr, "CY_encryption_EASCII(-> KEY_ERROR: the key is owned but its null <-)\n"); return CY_ERROR;}
-
-    return CY_NORMAL_EASCII(0, 255, file, key, buffer);
+    return CY_OK;
 }
 
-CY_STATE_FLAG CY_decryption_EASCII(const CY_String file, CY_KEY *key, uint8_t **buffer)
+CY_STATE_FLAG cy_decryption_eascii(const CY_String file, const CY_KEY *key, uint8_t **buffer)
 {
-    uint8_t keymap[256];
-    for (uint16_t i = 0; i < 256; i++) keymap[i] = (uint8_t) i;
-    
-    if(CY_INVERSE_key(0, 255, *key, (CY_KEY) {.owner=CY_OWNED, .size=26, .str=keymap}, key) == CY_ERROR) return CY_ERROR;
-    
-    if(CY_NORMAL_EASCII(0, 255,file, key, buffer) == CY_ERROR) return CY_ERROR;
+    if(cy_check_eascii(*key) == CY_ERR) return CY_ERR;
 
-    return CY_INVERSE_key(0, 255, *key, (CY_KEY) {.owner=CY_OWNED, .size=26, .str=keymap}, key);
+    CY_KEY invkey = {.owner=CY_NOT_OWNED, .size=0, .str=NULL};
+    uint8_t eascii[256];
+    for(uint16_t i = 0; i < 256; i++) eascii[i] = i;
+
+    cy_key_linear_inverse_generated(0, 255, (CY_KEY){.owner=CY_OWNED, .size=256, .str=eascii}, *key, &invkey);
+    for (size_t i = 0; i < file.size; i++)
+    {
+        uint8_t c = file.str[i];
+        c = invkey.str[c];
+        (*buffer)[i] = c;
+    }
+    return free_space(&invkey);
 }
+
