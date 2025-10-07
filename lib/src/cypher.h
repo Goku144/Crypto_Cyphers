@@ -105,7 +105,7 @@ typedef struct CY_String
 typedef CY_STATE_FLAG (*CY_FUNC)
 (
 
-    const CY_String file, 
+    CY_String file, 
     CY_KEY *key, 
     uint8_t **buffer
     
@@ -128,18 +128,22 @@ CY_STATE_FLAG cy_key_export(const CY_KEY key, const char *outpath);
 
 CY_STATE_FLAG cypher(const char *inpath, CY_KEY *key, const CY_FUNC cypherfunc, const char *outpath);
 
-CY_STATE_FLAG cy_encryption_caesar(const CY_String file, const CY_KEY *key, uint8_t **buffer);
+CY_STATE_FLAG cy_encryption_caesar(CY_String file, CY_KEY *key, uint8_t **buffer);
 
-CY_STATE_FLAG cy_decryption_caesar(const CY_String file, const CY_KEY *key, uint8_t **buffer);
+CY_STATE_FLAG cy_decryption_caesar(CY_String file, CY_KEY *key, uint8_t **buffer);
 
-CY_STATE_FLAG cy_encryption_monoalpahbetic(const CY_String file, const CY_KEY *key, uint8_t **buffer);
+CY_STATE_FLAG cy_encryption_monoalpahbetic(CY_String file, CY_KEY *key, uint8_t **buffer);
 
-CY_STATE_FLAG cy_decryption_monoalpahbetic(const CY_String file, const CY_KEY *key, uint8_t **buffer);
+CY_STATE_FLAG cy_decryption_monoalpahbetic(CY_String file, CY_KEY *key, uint8_t **buffer);
 
-CY_STATE_FLAG cy_crack_monoalpahbetic(const CY_String file, CY_KEY *key, uint8_t **buffer);
+CY_STATE_FLAG cy_crack_monoalpahbetic(CY_String file, CY_KEY *key, uint8_t **buffer);
 
-CY_STATE_FLAG cy_encryption_eascii(const CY_String file, const CY_KEY *key, uint8_t **buffer);
+CY_STATE_FLAG cy_encryption_eascii(CY_String file, CY_KEY *key, uint8_t **buffer);
 
-CY_STATE_FLAG cy_decryption_eascii(const CY_String file, const CY_KEY *key, uint8_t **buffer);
+CY_STATE_FLAG cy_decryption_eascii(CY_String file, CY_KEY *key, uint8_t **buffer);
+
+CY_STATE_FLAG cy_encryption_playfair(CY_String file, CY_KEY *key, uint8_t **buffer);
+
+CY_STATE_FLAG cy_decryption_playfair(CY_String file, CY_KEY *key, uint8_t **buffer);
 
 #endif // __CYPHER_KEYS__

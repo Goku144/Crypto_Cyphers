@@ -75,6 +75,36 @@ static CY_STATE_FLAG cy_err_manager(const CY_STATE_FLAG e, const char *funcname,
  * 
  * 
  * 
+ *                 General Helper Functions 
+ *
+ * 
+ * 
+ * 
+ *********************************************************/
+
+
+
+
+// is used in the playfair cypher
+static void find_matrix_pos(const uint8_t *fairkey, const uint8_t val, uint8_t *posx, uint8_t *posy)
+{
+    for (uint8_t i = 0; i < 16; i++)
+    {   
+        for (uint8_t j = 0; j < 16; j++)
+        {
+            if(val == fairkey[i*16 + j]) {*posx = i; *posy = j;}
+        }
+    }
+}
+
+
+
+
+/******************************************************** 
+ * 
+ * 
+ * 
+ * 
  *                     Random Functions 
  *
  * 
@@ -322,6 +352,19 @@ static CY_STATE_FLAG malloc_space(void **memp, const size_t size)
     return CY_OK;
 }
 
+static CY_STATE_FLAG realloc_space(void **memp, const size_t size)
+{
+        if (!memp) return cy_err_manager(CY_ERR_ARG, __func__, ": memp is NULL");
+    if (!size) return cy_err_manager(CY_ERR_ARG, __func__, ": size is 0");
+
+    *memp = realloc(*memp, size);
+
+    if (!*memp) 
+    {perror("realloc"); return cy_err_manager(CY_ERR_OOM, __func__, ": realloc faild to reallocate space");}
+
+    return CY_OK;
+}
+
 static CY_STATE_FLAG free_space(CY_String *file)
 {
     if (!file || !file->str) return cy_err_manager(CY_ERR_ARG, __func__, ": file/file->str is NULL");
@@ -496,6 +539,12 @@ static CY_STATE_FLAG cy_check_eascii(const CY_KEY key)
     return CY_OK;
 }
 
+static CY_STATE_FLAG cy_check_playfaire(const CY_KEY key)
+{
+    if(!key.str || key.owner == CY_NOT_OWNED || key.size != 256) return cy_err_manager(CY_ERR_ARG, __func__, ": key is NULL, not owned or size is not 256");
+    return CY_OK;
+}
+
 
 
 
@@ -616,7 +665,7 @@ CY_STATE_FLAG cypher(const char *inpath, CY_KEY *key, const CY_FUNC cypherfunc, 
     free(buffer); return free_space(&file);
 }
 
-CY_STATE_FLAG cy_encryption_caesar(const CY_String file, const CY_KEY *key, uint8_t **buffer)
+CY_STATE_FLAG cy_encryption_caesar(CY_String file, CY_KEY *key, uint8_t **buffer)
 {
     if(cy_check_caesar(*key) == CY_ERR) return CY_ERR;
 
@@ -637,7 +686,7 @@ CY_STATE_FLAG cy_encryption_caesar(const CY_String file, const CY_KEY *key, uint
     return CY_OK;
 }
 
-CY_STATE_FLAG cy_decryption_caesar(const CY_String file, const CY_KEY *key, uint8_t **buffer)
+CY_STATE_FLAG cy_decryption_caesar(CY_String file, CY_KEY *key, uint8_t **buffer)
 {
     if(cy_check_caesar(*key) == CY_ERR) return CY_ERR;
 
@@ -658,7 +707,7 @@ CY_STATE_FLAG cy_decryption_caesar(const CY_String file, const CY_KEY *key, uint
     return CY_OK;
 }
 
-CY_STATE_FLAG cy_encryption_monoalpahbetic(const CY_String file, const CY_KEY *key, uint8_t **buffer)
+CY_STATE_FLAG cy_encryption_monoalpahbetic(CY_String file, CY_KEY *key, uint8_t **buffer)
 {
     if(cy_check_monoalpahbetic(*key) == CY_ERR) return CY_ERR;
 
@@ -675,7 +724,7 @@ CY_STATE_FLAG cy_encryption_monoalpahbetic(const CY_String file, const CY_KEY *k
     return CY_OK;
 }
 
-CY_STATE_FLAG cy_decryption_monoalpahbetic(const CY_String file, const CY_KEY *key, uint8_t **buffer)
+CY_STATE_FLAG cy_decryption_monoalpahbetic(CY_String file, CY_KEY *key, uint8_t **buffer)
 {
     if(cy_check_monoalpahbetic(*key) == CY_ERR) return CY_ERR;
 
@@ -695,7 +744,7 @@ CY_STATE_FLAG cy_decryption_monoalpahbetic(const CY_String file, const CY_KEY *k
     return free_space(&invkey);
 }
 
-CY_STATE_FLAG cy_crack_monoalpahbetic(const CY_String file, CY_KEY *key, uint8_t **buffer)
+CY_STATE_FLAG cy_crack_monoalpahbetic(CY_String file, CY_KEY *key, uint8_t **buffer)
 {
     CY_KEY invkey = {.owner=CY_NOT_OWNED, .size=0, .str=NULL};
     size_t numtable[26] = {0};
@@ -733,7 +782,7 @@ CY_STATE_FLAG cy_crack_monoalpahbetic(const CY_String file, CY_KEY *key, uint8_t
     return CY_OK;
 }
 
-CY_STATE_FLAG cy_encryption_eascii(const CY_String file, const CY_KEY *key, uint8_t **buffer)
+CY_STATE_FLAG cy_encryption_eascii(CY_String file, CY_KEY *key, uint8_t **buffer)
 {
     if(cy_check_eascii(*key) == CY_ERR) return CY_ERR;
 
@@ -747,10 +796,9 @@ CY_STATE_FLAG cy_encryption_eascii(const CY_String file, const CY_KEY *key, uint
     return CY_OK;
 }
 
-CY_STATE_FLAG cy_decryption_eascii(const CY_String file, const CY_KEY *key, uint8_t **buffer)
+CY_STATE_FLAG cy_decryption_eascii(CY_String file, CY_KEY *key, uint8_t **buffer)
 {
     if(cy_check_eascii(*key) == CY_ERR) return CY_ERR;
-
     CY_KEY invkey = {.owner=CY_NOT_OWNED, .size=0, .str=NULL};
     uint8_t eascii[256];
     for(uint16_t i = 0; i < 256; i++) eascii[i] = i;
@@ -765,3 +813,97 @@ CY_STATE_FLAG cy_decryption_eascii(const CY_String file, const CY_KEY *key, uint
     return free_space(&invkey);
 }
 
+CY_STATE_FLAG cy_encryption_playfair(CY_String file, CY_KEY *key, uint8_t **buffer)
+{
+    if(cy_check_playfaire(*key) == CY_ERR) return CY_ERR;
+
+    if(realloc_space((void **) buffer, file.size * 2 + 1) == CY_ERR) return CY_ERR;
+
+    size_t size = 0;
+    for (size_t i = 0; i < file.size; i++)
+    {
+        (*buffer)[size] = file.str[i];
+        if(i + 1 < file.size && file.str[i] == file.str[i + 1]) 
+            (*buffer)[++size] = key->str[(uint8_t) file.str[i + 1]];
+        size++;
+    }
+
+    if (size & 1) (*buffer)[size++] = key->str[ (*buffer)[size - 1] ];
+
+    if(realloc_space((void **) buffer, size) == CY_ERR) return CY_ERR;
+
+    for (size_t i = 0; (i + 1) < size; i+=2)
+    {
+        uint8_t fx = 0, sx = 0, fy = 0, sy = 0;
+
+        find_matrix_pos(key->str, (*buffer)[i], &fx, &fy);
+
+        find_matrix_pos(key->str, (*buffer)[i + 1], &sx, &sy);
+        
+        if(fx == sx)
+        {
+            (*buffer)[i] = key->str[fx*16 + (uint8_t)((fy + 1) & 0x0F)];
+            (*buffer)[i + 1] = key->str[sx*16 + (uint8_t)((sy + 1) & 0x0F)];
+        }
+        else if(fy == sy)
+        {
+            (*buffer)[i] = key->str[((uint8_t)((fx + 1) & 0x0F))*16 + fy];
+            (*buffer)[i + 1] = key->str[((uint8_t)((sx + 1) & 0x0F))*16 + sy];
+        }
+        else
+        {
+            (*buffer)[i] = key->str[fx*16 + sy];
+            (*buffer)[i + 1] = key->str[sx*16 + fy];
+        }
+    }
+
+    file.size = size;
+    return CY_OK;
+}
+
+CY_STATE_FLAG cy_decryption_playfair(CY_String file, CY_KEY *key, uint8_t **buffer)
+{
+    if(cy_check_playfaire(*key) == CY_ERR) return CY_ERR;
+
+    for (size_t i = 0; (i + 1) < file.size; i+=2)
+    {
+        uint8_t fx = 0, sx = 0, fy = 0, sy = 0;
+
+        find_matrix_pos(key->str, file.str[i], &fx, &fy);
+
+        find_matrix_pos(key->str, file.str[i + 1], &sx, &sy);
+        
+        if(fx == sx)
+        {
+            (*buffer)[i] = key->str[fx*16 + (uint8_t)((fy + 15) & 0x0F)];
+            (*buffer)[i + 1] = key->str[sx*16 +(uint8_t)((sy + 15) & 0x0F)];
+        }
+        else if(fy == sy)
+        {
+            (*buffer)[i] = key->str[((uint8_t)((fx + 15) & 0x0F))*16 + fy];
+            (*buffer)[i + 1] = key->str[((uint8_t)((sx + 15) & 0x0F))*16 + sy];
+        }
+        else
+        {
+            (*buffer)[i] = key->str[fx*16 + sy];
+            (*buffer)[i + 1] = key->str[sx*16 + fy];
+        }
+    }
+
+    size_t size = 0;
+    for (size_t i = 0; (i + 1) < file.size; i++)
+    {
+        (*buffer)[size++] = (*buffer)[i];
+        if(i + 2 < file.size && (*buffer)[i] == (*buffer)[i + 2] && (*buffer)[i + 1] == key->str[(uint8_t) (*buffer)[i]]) 
+        {
+            (*buffer)[size++] = (*buffer)[i + 2];
+            i+=2;
+        }
+    }
+    
+    file.size = size;
+
+    if(realloc_space((void **) buffer, size) == CY_ERR) return CY_ERR;
+
+    return CY_OK;
+}
