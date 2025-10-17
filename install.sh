@@ -1,8 +1,8 @@
-cd lib-src
+cd lib/src
 sudo make install clean
 cd ..
 cd ..
-cd CLI-src
+cd CLI/src
 sudo make install clean
 cd ..
 cd ..
