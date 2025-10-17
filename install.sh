@@ -3,6 +3,7 @@ sudo make install clean
 cd ..
 cd ..
 cd CLI/src
-sudo make install clean
+make clean
+sudo make install
 cd ..
 cd ..

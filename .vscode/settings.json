@@ -1,6 +1,7 @@
 {
     "files.associations": {
         "stdbool.h": "c",
-        "cypher.h": "c"
+        "cypher.h": "c",
+        "stdio.h": "c"
     }
 }

@@ -14,10 +14,8 @@
  * limitations under the License.
  */
 
-
-
-
 #include "cypher.h"
+
 
 
 
@@ -25,7 +23,6 @@
   #define NOMINMAX
   #include <windows.h>
   #include <bcrypt.h>
-  #pragma comment(lib, "bcrypt.lib")
 
   // Keep original call/semantics (NTSTATUS == 0 on success)
   static inline int cy_random_bytes(void *p, size_t n) {
@@ -34,6 +31,7 @@
 
   #define CY_FSEEK  _fseeki64
   #define CY_FTELL  _ftelli64
+  #define __int64_t __int64
 
 #else
   // Linux / POSIX
@@ -399,7 +397,7 @@ static CY_STATE_FLAG size_file(FILE *fp, size_t *size)
     if (_fseeki64(fp, 0, SEEK_END) != 0)
     {perror("_fseeki64(END)"); return cy_err_manager(CY_ERR_IO, __func__, ": seek end failed");}
 
-    __int64_t  fs = _ftelli64(fp);
+    __int64_t fs = _ftelli64(fp);
     if (fs < 0) 
     {perror("_ftelli64"); return cy_err_manager(CY_ERR_IO, __func__, ": tell failed");}
 
@@ -897,12 +895,12 @@ CY_STATE_FLAG cy_encryption_playfair(CY_String file, CY_KEY *key, uint8_t **buff
     for (size_t i = 0; i < file.size; i++)
     {
         (*buffer)[size] = file.str[i];
-        if(i + 1 < file.size && file.str[i] == file.str[i + 1])
-        {++size; (*buffer)[size] = key->str[(uint8_t) file.str[i + 1]];}
+        if(i + 1 < file.size && file.str[i] == file.str[i + 1]) 
+            (*buffer)[++size] = key->str[(uint8_t) file.str[i + 1]];
         size++;
     }
 
-    if (size & 1) {(*buffer)[size] = key->str[ (*buffer)[size - 1] ]; size++;};
+    if (size & 1) {(*buffer)[size] = key->str[ (*buffer)[size - 1] ]; size++;}
 
     if(realloc_space((void **) buffer, size) == CY_ERR) return CY_ERR;
 
@@ -967,12 +965,11 @@ CY_STATE_FLAG cy_decryption_playfair(CY_String file, CY_KEY *key, uint8_t **buff
     size_t size = 0;
     for (size_t i = 0; (i + 1) < file.size; i++)
     {
-        (*buffer)[size] = (*buffer)[i];
-        size++;
+        (*buffer)[size++] = (*buffer)[i];
         if(i + 2 < file.size && (*buffer)[i] == (*buffer)[i + 2] && (*buffer)[i + 1] == key->str[(uint8_t) (*buffer)[i]]) 
         {
-            (*buffer)[size] = (*buffer)[i + 2];
-            size++; i+=2;
+            (*buffer)[size++] = (*buffer)[i + 2];
+            i+=2;
         }
     }
     

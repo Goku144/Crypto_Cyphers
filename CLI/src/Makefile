@@ -2,13 +2,12 @@
 BIN_DIR := bin
 SRC     := main.c
 PRG     := cypher
-EXE     := $(BIN_DIR)/$(PRG).exe   # <-- Windows build (unchanged)
+EXE     := $(BIN_DIR)/$(PRG).exe
 
 CC      ?= gcc
 CFLAGS  ?= -O2 -Wall -Wextra
 LDLIBS  ?= -lcypher
 
-# ---------------- DO NOT TOUCH: Windows targets ----------------
 .PHONY: all clean
 all: $(EXE)
 
@@ -21,57 +20,49 @@ $(EXE): $(SRC) | $(BIN_DIR)
 clean:
 	@rm -f "$(EXE)"
 
-# ---------------- Linux-only additions ----------------
+# ---------------- Linux additions (Windows part above is untouched) ----------------
+
 UNAME_S  := $(shell uname -s)
 IS_LINUX := $(findstring Linux,$(UNAME_S))
 
 # Linux build output (no .exe)
 LINUX_EXE := $(BIN_DIR)/$(PRG)
 
-# Optional: if libcypher is not in default link paths, set LIBDIR=/usr/local/lib
-LIBDIR   ?=
-LDFLAGS  :=
-ifneq ($(strip $(LIBDIR)),)
-  LDFLAGS += -L$(LIBDIR) -Wl,-rpath,$(LIBDIR)
-endif
-
-# Install into PATH on Linux (default /usr/local/bin)
+# Install prefix (PATH location on Linux)
 PREFIX  ?= /usr/local
 BINDIR  := $(PREFIX)/bin
 DESTDIR ?=
 
 .PHONY: linux install uninstall print-dirs
 
-# Build the Linux binary (non-.exe) without touching Windows build
+# Build Linux binary (separate from Windows .exe)
 linux: $(LINUX_EXE)
 
 $(LINUX_EXE): $(SRC) | $(BIN_DIR)
-	$(CC) $(CFLAGS) -o "$@" "$<" $(LDFLAGS) $(LDLIBS)
+	$(CC) $(CFLAGS) -o "$@" "$<" $(LDLIBS)
 
-# Install to system PATH on Linux, then clean local artifacts
+# Install Linux binary into system PATH
 install:
 ifeq ($(IS_LINUX),Linux)
 	@$(MAKE) --no-print-directory linux
 	@install -d "$(DESTDIR)$(BINDIR)"
 	@install -m755 "$(LINUX_EXE)" "$(DESTDIR)$(BINDIR)/$(PRG)"
 	@echo "Installed: $(DESTDIR)$(BINDIR)/$(PRG)"
-	@which ldconfig >/dev/null 2>&1 && sudo ldconfig || true
-	@$(MAKE) --no-print-directory clean
 else
-	@echo "Install target is Linux-only. Windows build is already in '$(EXE)'."
+	@echo "Install is Linux-only. Windows build remains '$(EXE)'."
 endif
 
 uninstall:
 ifeq ($(IS_LINUX),Linux)
 	@rm -f "$(DESTDIR)$(BINDIR)/$(PRG)"
-	@which ldconfig >/dev/null 2>&1 && sudo ldconfig || true
 	@echo "Removed: $(DESTDIR)$(BINDIR)/$(PRG)"
 else
-	@echo "Uninstall target is Linux-only."
+	@echo "Uninstall is Linux-only."
 endif
 
 print-dirs:
 	@echo UNAME_S=$(UNAME_S)
+	@echo IS_LINUX=$(IS_LINUX)
 	@echo PREFIX=$(PREFIX)
 	@echo BINDIR=$(BINDIR)
 	@echo BIN_DIR=$(BIN_DIR)
