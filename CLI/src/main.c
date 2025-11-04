@@ -2,37 +2,40 @@
  * Copyright (c) 2025 Jebbari Marouane
  */
 
+#define _POSIX_C_SOURCE 200809L
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h> 
 #include <cypher.h>
 
-int main(int argc, const char *argv[]) 
-{   
-    (void) argc;
-
-    // uint8_t str[] = {5,11};
-
-    CY_KEY key = {.owner=CY_NOT_OWNED, .size=0, .str=NULL};
-
-    // cy_key_linear_direct_generate(0, 255, &key);
-    // CY_key_linear_rand_generated(0, 255, &key);
-    
-
-    cy_key_import(argv[3], &key);
-
-    // printf("%zu", key.size);
-
-    // for (size_t i = 0; i < key.size; i++) printf("%c ", key.str[i]);
-
-    cypher(argv[2], &key, cy_crack_monoalpahbetic, argv[1]);
-    // cy_key_export(key, argv[3]);
-    // cy_key_export(key, argv[3]);
-    free(key.str);
-
-    return 0;
+static void print_u128_hex(__uint128_t x) {
+    for (int i=0; i <16; i++) 
+        printf("%c\t", (uint8_t) ((x >> (i) * 8) & 0xFF));
 }
 
-// CY_KEY key = (CY_KEY) {.str=pair, .size=26, .owner=CY_OWNED};
+static void add_padding(ssize_t *len, char *buffer)
+{
+    uint32_t n = *len % 16;
+    if(n == 0) return;
+    n = 16 - n;
+    for (size_t i = 0; i < n; i++)
+        buffer[*len - 1 + i] = (char) 'a';
+    *len += n - 1;
+}
 
-// cypher(argv[1], &key, monoalphabetic, CY_DECRYPTION, argv[2]);
+int main(void)
+{
+    __uint128_t key, msg, cy_msg;
+    cy_aes_key_imp("aes.key", &key);
+    
+    printf("here: ");
+    char *buffer= NULL; size_t n = 4096;
+    ssize_t size = 0;
+    size = getline(&buffer, &n, stdin);
+    add_padding(&size, buffer);
+    for (size_t i = 0; i < (size_t) size; i++)
+        printf("%c", buffer[i]);
+    printf("\n");
+    return 0;
+}
 

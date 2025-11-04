@@ -21,6 +21,7 @@
 #include <time.h>
 #include <stdint.h>
 #include <inttypes.h>
+#include <gmp.h>
 
 #if !defined(__CYPHER_KEYS__)
 #define __CYPHER_KEYS__
@@ -32,7 +33,7 @@ typedef enum CY_STATE_FLAG
 
     CY_OK,
 
-    /* 1–19: generic */
+    /* generic */
     CY_ERR,
     CY_ERR_ARG,
     CY_ERR_STATE,
@@ -40,108 +41,82 @@ typedef enum CY_STATE_FLAG
     CY_ERR_NOT_IMPL,
     CY_ERR_INTERNAL,
 
-    /* 20–39: memory/buffer */
+    /* memory/buffer */
     CY_ERR_OOM,
     CY_ERR_SPACE,     // (add now: caller out buffer too small)
     CY_ERR_SIZE,      // invalid size/len
     CY_ERR_OVERLAP,   // (add now: in/out overlap not allowed)
 
-    /* 40–59: I/O */
+    /* I/O */
     CY_ERR_IO,
     CY_ERR_EOF,
     CY_ERR_OPEN,
     CY_ERR_CLOSE,
 
-    /* 60–79: parsing/validation (handy even if unused today) */
+    /* parsing/validation (handy even if unused today) */
     CY_ERR_FORMAT,    // parse error (hex/base64/etc.)
     CY_ERR_VALUE,     // invalid content (e.g., not a permutation)
     CY_ERR_RANGE,     // out of allowed range
 
-    /* 80–109: crypto-specific */
+    /* crypto-specific */
     CY_ERR_RNG,
     CY_ERR_KEY,
     CY_ERR_KEY_SIZE,
     CY_ERR_KEY_VALUE,
 
+    /* Info */
+    CY_INFO_EOF
+
 } CY_STATE_FLAG;
-
-
-typedef enum CY_PRIMALITY_FLAG 
-{
-
-    CY_INCONCLUSIVE, 
-    CY_COMPOSITE, 
-    CY_PRIME
-
-} CY_PRIMALITY_FLAG;
-
-typedef enum CY_OWNERSHIP_FLAG 
-{
-
-    CY_OWNED,
-    CY_NOT_OWNED
-
-} CY_OWNERSHIP_FLAG;
-
-typedef struct CY_Residu64 
-{
-
-    uint64_t value;
-    uint64_t mod;
-
-} CY_Residu64;
 
 typedef struct CY_String 
 {
     
-    uint8_t *str; 
-    size_t size; 
-    CY_OWNERSHIP_FLAG owner;
+    mpz_t *key; 
+    size_t size;
 
 } CY_String, CY_KEY;
 
-typedef CY_STATE_FLAG (*CY_FUNC)
-(
-
-    CY_String file, 
-    CY_KEY *key, 
-    uint8_t **buffer
-    
-);
-
 /************************* linear Key Functions ***************************/
 
-CY_STATE_FLAG cy_key_linear_direct_generate(const uint8_t start, const uint8_t end, CY_KEY *key);
+CY_STATE_FLAG cy_rsa_key_gen(const mp_bitcnt_t bitsize, mpz_t *pubkey, mpz_t *prvkey);
 
-CY_STATE_FLAG CY_key_linear_rand_generated(const uint8_t start, const uint8_t end, CY_KEY *key);
+CY_STATE_FLAG cy_rsa_key_imp(const char *path, mpz_t *key[2]);
 
-CY_STATE_FLAG cy_key_linear_inverse_generated(const uint8_t start, const uint8_t end, const CY_KEY mapkey, const CY_KEY key, CY_KEY *invkey);
+CY_STATE_FLAG cy_rsa_key_exp(const char *path, const mpz_t key[2]);
 
-CY_STATE_FLAG cy_key_import(const char *inpath, CY_KEY *key);
+CY_STATE_FLAG cy_aes_key_gen(__uint128_t *key);
 
-CY_STATE_FLAG cy_key_export(const CY_KEY key, const char *outpath);
+CY_STATE_FLAG cy_aes_key_imp(const char *path, __uint128_t *key);
 
+CY_STATE_FLAG cy_aes_key_exp(const char *path, __uint128_t key);
+
+void cy_aes_from_128_to_4by4(const __uint128_t num, uint8_t tab[4][4]);
+
+void cy_aes_substitute_bytes(const uint8_t sbox[16][16], uint8_t state[4][4]);
+
+void cy_aes_shift_rows(uint8_t state[4][4]);
+
+void cy_aes_invshift_rows(uint8_t state[4][4]);
+
+void cy_aes_mix_columns(const uint8_t mix_c_matrix[4][4], uint8_t state[4][4]);
+
+void cy_aes_add_round_key(const uint32_t key[4], uint8_t state[4][4]);
+
+void cy_aes_g_function(const uint8_t j, uint32_t *w);
+
+void cy_aes_key_expansion(__uint128_t key, uint32_t w[44]);
+
+void cy_aes_from_4by4_to_128(const uint8_t tab[4][4], __uint128_t *num);
 
 /**************************** Cypher Functions ****************************/
 
-CY_STATE_FLAG cypher(const char *inpath, CY_KEY *key, const CY_FUNC cypherfunc, const char *outpath);
+void cy_rsa_encryption(const char c, const mpz_t *key, mpz_ptr msg);
 
-CY_STATE_FLAG cy_encryption_caesar(CY_String file, CY_KEY *key, uint8_t **buffer);
+void cy_rsa_decryption(const mpz_srcptr msg, const mpz_t *key, char *c);
 
-CY_STATE_FLAG cy_decryption_caesar(CY_String file, CY_KEY *key, uint8_t **buffer);
+void cy_aes_encryption(__uint128_t msg, __uint128_t key, __uint128_t *cy_msg);
 
-CY_STATE_FLAG cy_encryption_monoalpahbetic(CY_String file, CY_KEY *key, uint8_t **buffer);
-
-CY_STATE_FLAG cy_decryption_monoalpahbetic(CY_String file, CY_KEY *key, uint8_t **buffer);
-
-CY_STATE_FLAG cy_crack_monoalpahbetic(CY_String file, CY_KEY *key, uint8_t **buffer);
-
-CY_STATE_FLAG cy_encryption_eascii(CY_String file, CY_KEY *key, uint8_t **buffer);
-
-CY_STATE_FLAG cy_decryption_eascii(CY_String file, CY_KEY *key, uint8_t **buffer);
-
-CY_STATE_FLAG cy_encryption_playfair(CY_String file, CY_KEY *key, uint8_t **buffer);
-
-CY_STATE_FLAG cy_decryption_playfair(CY_String file, CY_KEY *key, uint8_t **buffer);
+void cy_aes_decryption(__uint128_t msg, __uint128_t key, __uint128_t *cy_msg);
 
 #endif // __CYPHER_KEYS__

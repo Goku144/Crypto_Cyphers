@@ -6,7 +6,7 @@ EXE     := $(BIN_DIR)/$(PRG).exe
 
 CC      ?= gcc
 CFLAGS  ?= -O2 -Wall -Wextra
-LDLIBS  ?= -lcypher
+LDLIBS  ?= -lcypher -lgmp
 
 .PHONY: all clean
 all: $(EXE)

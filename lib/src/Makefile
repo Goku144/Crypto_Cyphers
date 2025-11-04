@@ -21,7 +21,7 @@ LIBBASE := lib$(SNAME)
 DLL     := $(LIBBASE).dll
 IMPLIB  := $(LIBBASE).dll.a
 OBJ     := $(SNAME).o
-LDLIBS  ?= -lbcrypt
+LDLIBS  ?= -lbcrypt -lgmp
 
 CC      ?= gcc
 CFLAGS  ?= -O2 -Wall -Wextra -DWIN32_LEAN_AND_MEAN -DBUILDING_$(SNAME)_DLL
