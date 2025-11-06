@@ -107,7 +107,7 @@
 
 
 
-static CY_STATE_FLAG cy_state_manager(const CY_STATE_FLAG e, const char *funcname, const char *msg){
+CY_STATE_FLAG cy_state_manager(const CY_STATE_FLAG e, const char *funcname, const char *msg){
     switch(e)
     {
     case CY_OK: return CY_OK;
@@ -710,12 +710,12 @@ static CY_STATE_FLAG close_file(FILE *fp)
 
 
 
-CY_STATE_FLAG cy_rsa_key_gen(const mp_bitcnt_t bitsize, mpz_t *pubkey, mpz_t *prvkey)
+CY_STATE_FLAG cy_rsa_key_gen(const mp_bitcnt_t bitsize, mpz_t **pubkey, mpz_t **prvkey)
 {
     mpz_t n, p, q, phi_n, e, d;
-    pubkey = malloc(2 * sizeof (mpz_t));
-    prvkey = malloc(2 * sizeof (mpz_t));
-    mpz_inits(pubkey[0], pubkey[1], prvkey[0], prvkey[1], n, p, q, phi_n, e, d, NULL);
+    *pubkey = malloc(2 * sizeof((*pubkey)[0]));
+    *prvkey = malloc(2 * sizeof((*prvkey)[0]));
+    mpz_inits((*pubkey)[0], (*pubkey)[1], (*prvkey)[0], (*prvkey)[1], n, p, q, phi_n, e, d, NULL);
     cy_rsa_prime_prob_gen(bitsize, p);
     cy_rsa_prime_prob_gen(bitsize, q);
     mpz_mul(n, p, q);
@@ -724,13 +724,13 @@ CY_STATE_FLAG cy_rsa_key_gen(const mp_bitcnt_t bitsize, mpz_t *pubkey, mpz_t *pr
     mpz_mul(phi_n, p, q);
     cy_rsa_prime_prob_gen(bitsize / 10, e);
     if(EEA(e, phi_n, d) == CY_ERR) return CY_ERR;
-    mpz_set(pubkey[0], e); mpz_set(pubkey[1], n);
-    mpz_set(prvkey[0], d); mpz_set(prvkey[1], n);
+    mpz_set((*pubkey)[0], e); mpz_set((*pubkey)[1], n);
+    mpz_set((*prvkey)[0], d); mpz_set((*prvkey)[1], n);
     mpz_clears(e, d, n, p, q, phi_n, NULL);
     return CY_OK;
 }
 
-CY_STATE_FLAG cy_rsa_key_imp(const char *path, mpz_t *key[2])
+CY_STATE_FLAG cy_rsa_key_imp(const char *path, mpz_t **key)
 {
     FILE *fp;
     *key = malloc(2 * sizeof((*key)[0]));
@@ -742,7 +742,7 @@ CY_STATE_FLAG cy_rsa_key_imp(const char *path, mpz_t *key[2])
     return CY_OK;
 }
 
-CY_STATE_FLAG cy_rsa_key_exp(const char *path, const mpz_t key[2])
+CY_STATE_FLAG cy_rsa_key_exp(const char *path, const mpz_t *key)
 {
     FILE *fp;
     if(open_file(&fp, "wb", path) == CY_ERR) return CY_ERR;
@@ -764,7 +764,8 @@ CY_STATE_FLAG cy_aes_key_imp(const char *path, __uint128_t *key)
 {
     FILE *fp; uint8_t b[16]={0}; *key = 0;
     if(open_file(&fp, "rb", path) == CY_ERR) return CY_ERR;
-    fread(b, 1, 16, fp);
+    size_t size = fread(b, 1, 16, fp);
+    if(size == 0) return cy_state_manager(CY_ERR_IO, __func__, ": didnt read the key");
     for (int i=0; i <16; i++) *key |= ((__uint128_t)(b[i]))<<(i * 8);
     if(close_file(fp) == CY_ERR) return CY_ERR;
     return CY_OK;
@@ -798,17 +799,17 @@ CY_STATE_FLAG cy_aes_key_exp(const char *path, __uint128_t key)
 
 
 
-void cy_rsa_encryption(const char c, const mpz_t *key, mpz_ptr msg)
+void cy_rsa_encryption(const uint8_t c, const mpz_t *key, mpz_ptr cy_msg)
 {
-    mpz_set_ui(msg, (uint8_t) c);
-    mpz_powm(msg, msg, key[0], key[1]);
+    mpz_set_ui(cy_msg, c);
+    mpz_powm(cy_msg, cy_msg, key[0], key[1]);
 }
 
-void cy_rsa_decryption(const mpz_srcptr msg, const mpz_t *key, char *c)
+void cy_rsa_decryption(const mpz_srcptr cy_msg, const mpz_t *key, uint8_t *c)
 {
     mpz_t out; mpz_init(out);
-    mpz_powm(out, msg, key[0], key[1]);
-    *c = (char) mpz_get_ui(out);
+    mpz_powm(out, cy_msg, key[0], key[1]);
+    *c = (uint8_t) mpz_get_ui(out);
     mpz_clear(out);
 }
 

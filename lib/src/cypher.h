@@ -77,13 +77,15 @@ typedef struct CY_String
 
 } CY_String, CY_KEY;
 
+CY_STATE_FLAG cy_state_manager(const CY_STATE_FLAG e, const char *funcname, const char *msg);
+
 /************************* linear Key Functions ***************************/
 
-CY_STATE_FLAG cy_rsa_key_gen(const mp_bitcnt_t bitsize, mpz_t *pubkey, mpz_t *prvkey);
+CY_STATE_FLAG cy_rsa_key_gen(const mp_bitcnt_t bitsize, mpz_t **pubkey, mpz_t **prvkey);
 
-CY_STATE_FLAG cy_rsa_key_imp(const char *path, mpz_t *key[2]);
+CY_STATE_FLAG cy_rsa_key_imp(const char *path, mpz_t **key);
 
-CY_STATE_FLAG cy_rsa_key_exp(const char *path, const mpz_t key[2]);
+CY_STATE_FLAG cy_rsa_key_exp(const char *path, const mpz_t *key);
 
 CY_STATE_FLAG cy_aes_key_gen(__uint128_t *key);
 
@@ -111,9 +113,9 @@ void cy_aes_from_4by4_to_128(const uint8_t tab[4][4], __uint128_t *num);
 
 /**************************** Cypher Functions ****************************/
 
-void cy_rsa_encryption(const char c, const mpz_t *key, mpz_ptr msg);
+void cy_rsa_encryption(const uint8_t c, const mpz_t *key, mpz_ptr cy_msg);
 
-void cy_rsa_decryption(const mpz_srcptr msg, const mpz_t *key, char *c);
+void cy_rsa_decryption(const mpz_srcptr cy_msg, const mpz_t *key, uint8_t *c);
 
 void cy_aes_encryption(__uint128_t msg, __uint128_t key, __uint128_t *cy_msg);
 
