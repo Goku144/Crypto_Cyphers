@@ -28,6 +28,19 @@
 
 /****************************** Type Definition *****************************/
 
+#define CY_BUFSZ            (4096u * 128u)
+
+
+#define CY_SIZE_LEN      (sizeof(size_t))
+#define CY_TYPE_LEN      (1u)
+#define CY_PAD_LEN       (1u)
+
+#define CY_SIZE_OFFSET   (0u)
+#define CY_TYPE_OFFSET   (CY_SIZE_OFFSET + CY_SIZE_LEN)
+#define CY_PAD_OFFSET    (CY_TYPE_OFFSET + CY_TYPE_LEN)
+#define CY_HEADER_OFFSET (CY_PAD_OFFSET  + CY_PAD_LEN)
+
+
 typedef enum CY_STATE_FLAG 
 {
 
@@ -77,6 +90,15 @@ typedef struct CY_String
 
 } CY_String, CY_KEY;
 
+typedef enum CY_CYPHER_TYPE
+{
+    CY_RSA = 1,
+    CY_AES
+}CY_CYPHER_TYPE;
+
+
+/**************************** flow Functions ******************************/
+
 CY_STATE_FLAG cy_state_manager(const CY_STATE_FLAG e, const char *funcname, const char *msg);
 
 /************************* linear Key Functions ***************************/
@@ -93,24 +115,6 @@ CY_STATE_FLAG cy_aes_key_imp(const char *path, __uint128_t *key);
 
 CY_STATE_FLAG cy_aes_key_exp(const char *path, __uint128_t key);
 
-void cy_aes_from_128_to_4by4(const __uint128_t num, uint8_t tab[4][4]);
-
-void cy_aes_substitute_bytes(const uint8_t sbox[16][16], uint8_t state[4][4]);
-
-void cy_aes_shift_rows(uint8_t state[4][4]);
-
-void cy_aes_invshift_rows(uint8_t state[4][4]);
-
-void cy_aes_mix_columns(const uint8_t mix_c_matrix[4][4], uint8_t state[4][4]);
-
-void cy_aes_add_round_key(const uint32_t key[4], uint8_t state[4][4]);
-
-void cy_aes_g_function(const uint8_t j, uint32_t *w);
-
-void cy_aes_key_expansion(__uint128_t key, uint32_t w[44]);
-
-void cy_aes_from_4by4_to_128(const uint8_t tab[4][4], __uint128_t *num);
-
 /**************************** Cypher Functions ****************************/
 
 void cy_rsa_encryption(const uint8_t c, const mpz_t *key, mpz_ptr cy_msg);
@@ -120,5 +124,37 @@ void cy_rsa_decryption(const mpz_srcptr cy_msg, const mpz_t *key, uint8_t *c);
 void cy_aes_encryption(__uint128_t msg, __uint128_t key, __uint128_t *cy_msg);
 
 void cy_aes_decryption(__uint128_t msg, __uint128_t key, __uint128_t *cy_msg);
+
+/************************* Buffer Cypher Functions ************************/
+
+void cy_buff_padding_add(const size_t size, uint8_t *pad, uint8_t buffer[]);
+
+void cy_buff_size_exp(const size_t size, uint8_t buff[]);
+
+void cy_buff_size_imp(const uint8_t buff[], size_t *size);
+
+void cy_buff_msg_128_exp(const __uint128_t msg, uint8_t buff[]);
+
+void cy_buff_msg_128_imp(const uint8_t buff[], __uint128_t *size);
+
+void cy_buff_header_exp(const size_t size, const CY_CYPHER_TYPE cy_type, const uint8_t pad, uint8_t buff[]);
+
+void cy_buff_header_imp(const uint8_t buff[], size_t *size, CY_CYPHER_TYPE *cy_type, uint8_t *pad);
+
+void cy_buff_rsa_key_exp(mpz_t *key, uint8_t buff[]);
+
+void cy_buff_rsa_key_imp(const uint8_t buff[], mpz_t **key);
+
+void cy_buff_aes_key_exp(const __uint128_t key, uint8_t buff[]);
+
+void cy_buff_aes_key_imp(const uint8_t buff[], __uint128_t *key);
+
+void cy_buff_rsa_encryption(const size_t size, const mpz_t *key, const size_t buffn, uint8_t buff[]);
+
+void cy_buff_rsa_decryption(const size_t size, const mpz_t *key, const size_t buffn, uint8_t buff[]);
+
+void cy_buff_aes_encryption(const size_t size, const __uint128_t key, uint8_t buff[]);
+
+void cy_buff_aes_decryption(const size_t size, const __uint128_t key, uint8_t buff[]);
 
 #endif // __CYPHER_KEYS__

@@ -426,3 +426,147 @@
     
 //     return 0;
 // }
+
+
+// static void cy_buff_imp_size_pad(const uint8_t buffer[], uint64_t *size, uint8_t *pad)
+// {
+//     *pad = buffer[8]; *size = 0;
+//     for (size_t i = 0; i < 8; i++) *size |= (uint64_t)(((uint64_t)buffer[7 - i]) << (i * 8));
+// }
+
+// static void cy_buff_exp_size_pad(const uint64_t size, const uint8_t pad, uint8_t buffer[])
+// {
+//     for (size_t i = 0; i < 8; i++) buffer[7 - i] = (uint8_t) ((((uint64_t)size) >> (i * 8)) & 0xFF);
+//     buffer[8] = pad;
+// }
+
+// void cy_buff_rsa_key_imp(const uint8_t buffer[], mpz_t **key)
+// {
+//     uint64_t sizekey0 = 0, sizekey1 = 0;
+//     *key = malloc(2 * sizeof((*key)[0]));
+//     mpz_inits((*key)[0], (*key)[1], NULL);
+//     cy_buff_imp_size(buffer + 9, &sizekey0);
+//     cy_buff_imp_size(buffer + 9 + 8 + sizekey0, &sizekey1);
+//     mpz_import((*key)[0], sizekey0, 1, sizeof(buffer[0]), 0, 0, buffer + 9 + 8);
+//     mpz_import((*key)[1], sizekey1, 1, sizeof(buffer[0]), 0, 0, buffer + 9 + sizekey0 + 16);
+// }
+
+// void cy_buff_rsa_key_exp(const mpz_t *key, uint8_t buffer[])
+// {
+//     size_t sizekey0 = 0, sizekey1 = 0;
+//     mpz_export(buffer + 9 + 8, &sizekey0, 1, sizeof(buffer[0]), 0, 0, key[0]);
+//     mpz_export(buffer + 9 + sizekey0 + 16, &sizekey1, 1, sizeof(buffer[0]), 0, 0, key[1]);
+//     cy_buff_exp_size((uint64_t) sizekey0, buffer + 9);
+//     cy_buff_exp_size((uint64_t) sizekey1, buffer + 9 + 8 + sizekey0);
+//     cy_buff_exp_size_pad((uint64_t)(sizekey0 + sizekey1 + 16), 0, buffer);
+// }
+
+// void cy_buff_aes_key_imp(const uint8_t buffer[], __uint128_t *key)
+// {
+//    cy_buff_imp_msg_128(buffer + 9, key);
+// }
+
+// void cy_buff_aes_key_exp(const __uint128_t key, uint8_t buffer[])
+// {
+//    cy_buff_exp_msg_128(key, buffer + 9);
+//    cy_buff_exp_size_pad(16, 0, buffer);
+// }
+
+// void cy_buff_rsa_encryption(const uint8_t buffin[], const mpz_t *key, uint8_t buffout[])
+// {
+//     uint64_t size, offset = 0; cy_buff_imp_size(buffin, &size);
+//     mpz_t cy_msg; mpz_init(cy_msg); size_t msgsize;
+//     for (size_t i = 0; i < size; i++)
+//     {
+//         offset += 8;
+//         cy_rsa_encryption(buffin[9 + i], key, cy_msg);
+//         mpz_export(buffout + 9 + offset, &msgsize, 1, 1, 1, 0, cy_msg);
+//         cy_buff_exp_size((uint64_t) msgsize, buffout + 9 + offset - 8);
+//         offset += msgsize;
+//     }
+//     cy_buff_exp_size_pad(size, 0, buffout); mpz_clear(cy_msg);
+// }
+
+// void cy_buff_rsa_decryption(const uint8_t buffin[], const mpz_t *key, uint8_t buffout[])
+// {
+//     uint64_t size, offset = 8; cy_buff_imp_size(buffin, &size);
+//     mpz_t cy_msg; mpz_init(cy_msg); size_t msgsize = 0;
+//     for (size_t i = 0; i < size; i++)
+//     {
+//         offset += msgsize;
+//         cy_buff_imp_size(buffin + 9 + offset - 8, &msgsize);
+//         mpz_import(cy_msg, msgsize, 1, 1, 1, 0, buffin + 9 + offset);
+//         cy_rsa_decryption(cy_msg, key, buffout + 9 + i);
+//         offset += 8;
+//     }
+//     cy_buff_exp_size_pad(size, 0, buffout); mpz_clear(cy_msg);
+// }
+
+// void cy_buff_aes_encryption(const __uint128_t key, uint8_t buffer[])
+// {
+//     __uint128_t msg, cy_msg; uint64_t size; uint8_t pad;
+//     cy_buff_imp_size_pad(buffer, &size, &pad);
+//     size = (size + pad) / 16;
+//     for (size_t i = 0; i < size; i++)
+//     {
+//         cy_buff_imp_msg_128(buffer + 9 + i * 16, &msg);
+//         cy_aes_encryption(msg, key, &cy_msg);
+//         cy_buff_exp_msg_128(cy_msg, buffer + 9 + i * 16);
+//     }
+// }
+
+// void cy_buff_aes_decryption(const __uint128_t key, uint8_t buffer[])
+// {
+//     __uint128_t msg, cy_msg; uint64_t size; uint8_t pad;
+//     cy_buff_imp_size_pad(buffer, &size, &pad);
+//     size = (size + pad) / 16;
+//     for (size_t i = 0; i < size; i++)
+//     {
+//         cy_buff_imp_msg_128(buffer + 9 + i * 16, &cy_msg);
+//         cy_aes_decryption(cy_msg, key, &msg);
+//         cy_buff_exp_msg_128(msg, buffer + 9 + i * 16);
+//     }
+// }
+// static void print_u128_hex(__uint128_t x) {
+//     for (int i=0; i <16; i++) 
+//         printf("%c\t", (uint8_t) ((x >> (i * 8)) & 0xFF));
+// }
+
+
+// uint8_t buff[CY_BUFSZ] = {0};
+    // uint8_t buff_1[CY_BUFSZ] = {0};
+    // // mpz_t *pubk, *prvk;
+    // // cy_rsa_key_gen(1024, &pubk, &prvk);
+
+    // __uint128_t key;
+    // cy_aes_key_gen(&key);
+    // ssize_t size = read(STDIN_FILENO, buff, CY_BUFSZ);
+    // uint8_t pad;
+    // cy_buff_padding_add(size, &pad, buff);
+    // cy_buff_aes_encryption(size + (uint8_t) pad, key, buff);
+    // write(STDOUT_FILENO, buff, size + pad);
+    // printf("\n");
+    // cy_buff_aes_decryption(size + (uint8_t) pad, key, buff);
+    // write(STDOUT_FILENO, buff, size);
+    // printf("pad = %u\n", pad);
+
+    // // cy_buff_rsa_encryption((size_t) size, pubk, BUFSZ - CY_PROTOCOL_HEADER_OFFSET, buff + CY_PROTOCOL_HEADER_OFFSET);
+
+    // // int fd = open("hmida.txt", O_RDWR | O_CREAT | O_TRUNC, 0777);
+
+    // // cy_buff_size_exp((size_t) size, buff);
+
+    // // write(fd, buff, BUFSZ);
+
+    // // lseek(fd, 0, SEEK_SET);
+
+    // // read(fd, buff_1, BUFSZ);
+
+    // // size_t size_1;
+
+    // // cy_buff_size_imp(buff_1, &size_1);
+
+    // // cy_buff_rsa_decryption(size_1, prvk, BUFSZ - CY_PROTOCOL_HEADER_OFFSET, buff_1 + CY_PROTOCOL_HEADER_OFFSET);
+
+    // // write(STDOUT_FILENO, buff_1 + CY_PROTOCOL_HEADER_OFFSET, size_1);
+
