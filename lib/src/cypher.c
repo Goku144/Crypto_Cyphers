@@ -920,19 +920,19 @@ void cy_buff_header_imp(const uint8_t buff[], size_t *size, CY_CYPHER_TYPE *cy_t
 void cy_buff_rsa_key_exp(mpz_t *key, uint8_t buff[])
 {
     size_t sizekey0 = 0, sizekey1 = 0;
-    mpz_export(buff, &sizekey0, 1, sizeof(buff[0]), 0, 0, key[0]);
+    mpz_export(buff + 8, &sizekey0, 1, sizeof(buff[0]), 0, 0, key[0]);
     cy_buff_size_exp(sizekey0, buff);
-    mpz_export(buff + sizekey0 + 8, &sizekey1, 1, sizeof(buff[0]), 0, 0, key[1]);
-    cy_buff_size_exp(sizekey1, buff + sizekey0);
+    mpz_export(buff + sizekey0 + 16, &sizekey1, 1, sizeof(buff[0]), 0, 0, key[1]);
+    cy_buff_size_exp(sizekey1, buff + 8 + sizekey0);
 }
 
 void cy_buff_rsa_key_imp(const uint8_t buff[], mpz_t **key)
 {
     size_t sizekey0 = 0, sizekey1 = 0;
     cy_buff_size_imp(buff, &sizekey0);
-    mpz_import((*key)[0], sizekey0, 1, sizeof(buff[0]), 0, 0, buff);
-    cy_buff_size_imp(buff + sizekey0, &sizekey1);
-    mpz_import((*key)[1], sizekey1, 1, sizeof(buff[0]), 0, 0, buff + sizekey0 + 8);
+    mpz_import((*key)[0], sizekey0, 1, sizeof(buff[0]), 0, 0, buff + 8);
+    cy_buff_size_imp(buff + 8 + sizekey0, &sizekey1);
+    mpz_import((*key)[1], sizekey1, 1, sizeof(buff[0]), 0, 0, buff + sizekey0 + 16);
 }
 
 void cy_buff_aes_key_exp(const __uint128_t key, uint8_t buff[])
@@ -1000,3 +1000,221 @@ void cy_buff_aes_decryption(const size_t size, const __uint128_t key, uint8_t bu
         cy_buff_msg_128_exp(msg, buff + i * 16);
     }
 }
+
+// typedef struct DoubleNode
+// {
+//     __uint128_t data;
+//     struct DoubleNode *next;
+//     struct DoubleNode *prev;
+// }DoubleNode;
+
+// typedef struct DoubleLinkedList
+// {
+//     size_t len;
+//     DoubleNode *head;
+//     DoubleNode *tail;
+// }DoubleLinkedList, Stack, Queue;
+
+// DoubleLinkedList new_DoubleLinkedList()
+// {
+//     return (DoubleLinkedList) {.len=0, .head=NULL, .tail=NULL};
+// }
+
+// Stack new_Stack()
+// {
+//     return new_DoubleLinkedList();
+// }
+
+// Queue new_Queue()
+// {
+//     return new_DoubleLinkedList();
+// }
+
+// int add_DoubleNode_end(DoubleLinkedList *list, const __uint128_t data)
+// {
+//     if(!list)
+//     {fprintf(stderr, "Cant add node to null list"); return -1;}
+
+//     DoubleNode *newdoublenode = malloc(sizeof(DoubleNode));
+//     if(!newdoublenode)
+//     {perror("add_DoubleNode(-> malloc <-)"); return -1;}
+//     newdoublenode->data = data;
+//     newdoublenode->next = NULL;
+//     newdoublenode->prev = NULL;
+//     list->len += 1;
+
+//     if(!list->head)
+//     {
+//         list->head = list->tail = newdoublenode;
+//     }
+//     else
+//     {
+//         list->tail->next = newdoublenode;
+//         newdoublenode->prev = list->tail;
+//         list->tail = newdoublenode;
+//     }
+//     return 0;
+// }
+
+// void push(Stack *stack, const __uint128_t data)
+// {
+//     add_DoubleNode_end(stack, data);
+// }
+
+// int add_DoubleNode_start(DoubleLinkedList *list, const __uint128_t data)
+// {
+//     if(!list)
+//     {fprintf(stderr, "Cant add node to null list"); return -1;}
+
+//     DoubleNode *newdoublenode = malloc(sizeof(DoubleNode));
+//     if(!newdoublenode)
+//     {perror("add_DoubleNode(-> malloc <-)"); return -1;}
+//     newdoublenode->data = data;
+//     newdoublenode->next = NULL;
+//     newdoublenode->prev = NULL;
+//     list->len += 1;
+
+//     if(!list->head)
+//     {
+//         list->head = list->tail = newdoublenode;
+//     }
+//     else
+//     {
+//         list->head->prev = newdoublenode;
+//         newdoublenode->next = list->head;
+//         list->head = newdoublenode;
+//     }
+//     return 0;
+// }
+
+// void enqueue(Queue *queue, const __uint128_t data)
+// {
+//     add_DoubleNode_end(queue, data);
+// }
+
+// __uint128_t remove_DoubleNode_end(DoubleLinkedList *list)
+// {
+//     if(!list || list->len == 0)
+//     {fprintf(stderr, "Cant remove node from null/empty list"); return 0;}
+
+//     DoubleNode *to_remove = list->tail;
+//     __uint128_t data = to_remove->data;
+//     list->len -= 1;
+
+//     if(list->head == list->tail)
+//     {
+//         list->head = list->tail = NULL;
+//     }
+//     else
+//     {
+//         list->tail = to_remove->prev;
+//         list->tail->next = NULL;
+//     }
+
+//     free(to_remove);
+//     return data;
+// }
+
+// __uint128_t pop(Stack *stack)
+// {
+//     return remove_DoubleNode_end(stack);
+// }
+
+// __uint128_t remove_DoubleNode_start(DoubleLinkedList *list)
+// {
+//     if(!list || list->len == 0)
+//     {fprintf(stderr, "Cant remove node from null/empty list"); return 0;}
+
+//     DoubleNode *to_remove = list->head;
+//     __uint128_t data = to_remove->data;
+//     list->len -= 1;
+
+//     if(list->head == list->tail)
+//     {
+//         list->head = list->tail = NULL;
+//     }
+//     else
+//     {
+//         list->head = to_remove->next;
+//         list->head->prev = NULL;
+//     }
+
+//     free(to_remove);
+//     return data;
+// }
+
+// __uint128_t dequeue(Queue *queue)
+// {
+//     return remove_DoubleNode_start(queue);
+// }
+
+// void free_DoubleLinkedList(DoubleLinkedList *list)
+// {
+//     if(!list)
+//     {fprintf(stderr, "Cant free null list"); return;}
+
+//     DoubleNode *current = list->head;
+//     DoubleNode *next;
+
+//     while(current)
+//     {
+//         next = current->next;
+//         free(current);
+//         current = next;
+//     }
+
+//     list->head = list->tail = NULL;
+//     list->len = 0;
+// }
+
+// void free_Stack(Stack *stack)
+// {
+//     free_DoubleLinkedList(stack);
+// }
+
+// void free_Queue(Queue *queue)
+// {
+//     free_DoubleLinkedList(queue);
+// }
+
+// void print_DoubleLinkedList(const DoubleLinkedList *list, const char *name)
+// {
+//     if(!list)
+//     {fprintf(stderr, "Cant print null list"); return;}
+
+//     DoubleNode *current = list->head;
+//     printf("%s: NULL <-> ", name);
+//     while(current)
+//     {
+//         printf("%lu <-> ", (unsigned long)current->data);
+//         current = current->next;
+//     }
+//     printf("NULL");
+//     printf("\n");
+// }
+
+// void print_DoubleLinkedList_reverse(const DoubleLinkedList *list, const char *name)
+// {
+//     if(!list)
+//     {fprintf(stderr, "Cant print null list"); return;}
+
+//     DoubleNode *current = list->tail;
+//     printf("%s: NULL <-> ", name);
+//     while(current)
+//     {
+//         printf("%lu <-> ", (unsigned long)current->data);
+//         current = current->prev;
+//     }
+//     printf("NULL");
+//     printf("\n");
+// }
+
+// void print_Stack(const Stack *stack)
+// {
+//     print_DoubleLinkedList(stack, "Stack");
+// }
+
+// void print_Queue(const Queue *queue)
+// {
+//     print_DoubleLinkedList_reverse(queue, "Queue");
+// }

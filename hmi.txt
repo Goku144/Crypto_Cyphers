@@ -1,0 +1,15 @@
+pour si dans g faire
+    ARB[si] <- NULL
+    COL[si] <- B
+initialize(f)
+Empiler(f,s0)
+COL[s0] <- G
+Tant que f est non vide faire
+    Depiler(sj, f)
+    pour si dans succesor(sj)
+        si COL[si] = B alors 
+            Empiler(f,si)
+            COL[si] <- G
+            ARB[si] <- sj
+    COL[sj] <- N
+returner ARB
