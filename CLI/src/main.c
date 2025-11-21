@@ -16,14 +16,139 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 
-void serror(const char *fmt, ...)
+
+#define CY_HEADER_OFFSET 16
+#define CY_BUFFSIZE 2048
+
+struct CY_HEADER
 {
-    va_list ap;
+    uint64_t cy_data_len;
+    uint8_t cy_pad_flag;
+    uint8_t cy_pad_size;
+    uint8_t cy_enc_flag;
+    uint8_t cy_enc_type;
+    uint8_t cy_key_flag;
+    uint8_t cy_key_type;
+    uint8_t cy_hash_flag;
+    uint8_t cy_hash_type;
+};
 
-    va_start(ap, fmt);           // start reading ...
-    vfprintf(stderr, fmt, ap);   // print to stderr using the va_list
-    va_end(ap);
 
+void cy_buff_header_exp(const struct CY_HEADER head, uint8_t buff[]);
+
+void cy_buff_header_imp(const uint8_t buff[], struct CY_HEADER *head);
+
+void cy_buff_size_exp(const size_t size, uint8_t buff[]);
+
+void cy_buff_size_imp(const uint8_t buff[], size_t *size);
+
+
+void cy_buff_size_exp(const size_t size, uint8_t buff[])
+{
+    for (size_t i = 0; i < sizeof(size_t); i++)
+        buff[sizeof(size_t) - (i + 1)] = (uint8_t)((size >> (i * 8)) & 0xFF);  
+}
+
+void cy_buff_size_imp(const uint8_t buff[], size_t *size)
+{
+    *size = 0;
+    for (size_t i = 0; i < sizeof(size_t); i++) 
+        *size |= ((size_t) (buff[sizeof(size_t) - (i + 1)])) << (i * 8);
+}
+
+void cy_buff_header_exp(const struct CY_HEADER head, uint8_t buff[])
+{
+    cy_buff_size_exp(head.cy_data_len, buff);
+    buff[8]  = head.cy_pad_flag;  buff[9]  = head.cy_pad_size;
+    buff[10] = head.cy_enc_flag;  buff[11] = head.cy_enc_type;
+    buff[12] = head.cy_key_flag;  buff[13] = head.cy_key_type;
+    buff[14] = head.cy_hash_flag; buff[15] = head.cy_hash_type;
+}
+
+void cy_buff_header_imp(const uint8_t buff[], struct CY_HEADER *head)
+{
+    memset(head, 0, sizeof (*head));
+    cy_buff_size_imp(buff, &head->cy_data_len);
+    head->cy_pad_flag  = buff[8];  head->cy_pad_size  = buff[9];
+    head->cy_enc_flag  = buff[10]; head->cy_enc_type  = buff[11];
+    head->cy_key_flag  = buff[12]; head->cy_key_type  = buff[13];
+    head->cy_hash_flag = buff[14]; head->cy_hash_type = buff[15];
+}
+
+void cy_buff_send(int __fd, const struct CY_HEADER head, void *buff)
+{
+    uint8_t *p = buff;
+    cy_buff_header_exp(head, p);
+    size_t fullsize = head.cy_data_len + 16;
+    size_t total = 0;
+    while (total < fullsize)
+    {
+        ssize_t n = send(__fd, p + total, fullsize - total, 0);
+        if(n == 0) serror("Peer closed before we send the full msg");
+        if(n < 0) serror(__func__);
+        total +=n;
+    }
+}
+
+void cy_buff_recv(int __fd, struct CY_HEADER *head, void *buff)
+{
+    uint8_t *p = buff;
+    size_t fullsize = 16;
+    size_t total = 0;
+    while (total < fullsize)
+    {
+        ssize_t n = recv(__fd, p + total, fullsize - total, 0);
+        if(n == 0) serror("Peer closed before we recv the full msg");
+        if(n < 0) serror(__func__);
+        total +=n;
+        if(total == 16)
+        {
+            cy_buff_header_imp(buff, head);
+            fullsize = head->cy_data_len + total;
+        }
+    }
+}
+
+void cy_buff_read(int __fd, struct CY_HEADER *head, void **buff)
+{
+    size_t buffsize = CY_BUFFSIZE;
+    memset(head, 0, sizeof(*head));
+    uint8_t *p = malloc(CY_BUFFSIZE * sizeof(*p));
+    *buff = p;
+    if(!p) serror(__func__);
+    while (1)
+    {
+        if(buffsize - head->cy_data_len < CY_BUFFSIZE) 
+        {
+            buffsize += CY_BUFFSIZE;
+            p = realloc(*buff, buffsize * sizeof(*p));
+            *buff = p;
+            if(!p) serror(__func__);
+        }
+        ssize_t n = read(__fd, p + head->cy_data_len, CY_BUFFSIZE);
+        if(n == 0) return;
+        if(n < 0) serror(__func__);
+        head->cy_data_len += n;
+    }
+}
+
+void cy_buff_write(int __fd, const struct CY_HEADER head, void *buff)
+{
+    uint8_t *p = buff;
+    size_t fullsize = head.cy_data_len;
+    size_t total = 0;
+    while (total < fullsize)
+    {
+        ssize_t n = send(__fd, p + total, fullsize - total, 0);
+        if(n == 0) serror("Peer closed before we send the full msg");
+        if(n < 0) serror(__func__);
+        total +=n;
+    }
+}
+
+void serror(const char *fmt)
+{
+    perror(fmt);
     exit(1);
 }
 
@@ -35,81 +160,15 @@ void print_u128_hex(__uint128_t x) {
     printf("0x%016llx%016llx\n", hi, lo);
 }
 
-#define BUFFSIZE 4096*128
-int main(int argc, char *argv[])
+int main(void)
 {
-    if (argc < 2) {
-        fprintf(stderr,"usage server: cypher -sp <port>\nusage server: cypher <ip> -p <port>\n");
-        return 1;
-    }
-    int sockfd, sockclientfd;
-    struct sockaddr_storage clientaddr;
-    socklen_t addr_size;
-    struct addrinfo hints, *servinfo, *clientinfo;
-    char ipvx[INET6_ADDRSTRLEN];
-
-    memset(&hints, 0, sizeof hints);
-    hints.ai_family = AF_INET;
-    hints.ai_socktype = SOCK_STREAM;
-
-    if(!strcmp(argv[1], "-sp"))
-    {
-        hints.ai_flags = AI_PASSIVE;
-        getaddrinfo(NULL, argv[2], &hints, &servinfo);
-
-        sockfd = socket(servinfo->ai_family, servinfo->ai_socktype, servinfo->ai_protocol);
-
-        bind(sockfd, servinfo->ai_addr, servinfo->ai_addrlen);
-
-        inet_ntop(servinfo->ai_family, &((struct sockaddr_in *)servinfo->ai_addr)->sin_addr, ipvx, INET_ADDRSTRLEN);
-
-        printf("listening on %s %s\n", ipvx, argv[2]);
-
-        listen(sockfd, 1);
-
-        sockclientfd = accept(sockfd, (struct sockaddr *)&clientaddr, &addr_size);
-        
-        if(sockclientfd == -1)
-            perror("accept(-> error <-)");
-        else
-            printf("Connection Was Successfull!\n");
-        mpz_t *pubk = malloc(2*sizeof(mpz_t)), *prvk = malloc(2*sizeof(mpz_t));
-        mpz_inits(pubk[0], pubk[1], prvk[0], prvk[1], NULL);
-        cy_rsa_key_gen(1024, &pubk, &prvk);
-        uint8_t buff[1024*128];
-        cy_buff_rsa_key_exp(pubk, buff);
-        send(sockclientfd, buff, 1024*128, 0);
-        gmp_printf("generated in server:\ne=%Zd\nn=%Zd\n", pubk[0], pubk[1]);
-        uint8_t buff2[1024*128];
-        recv(sockclientfd, buff2, 1024*128, 0);
-        __uint128_t aesk;
-        cy_buff_rsa_decryption(128, prvk, 1024*128, buff2);
-        cy_buff_msg_128_imp(buff2, &aesk);
-        printf("from client: ");
-        print_u128_hex(aesk);
-    }
-    else
-    {
-        getaddrinfo(argv[1], argv[2], &hints, &clientinfo);
-
-        sockfd = socket(clientinfo->ai_family, clientinfo->ai_socktype, clientinfo->ai_protocol);
-
-        connect(sockfd, clientinfo->ai_addr, clientinfo->ai_addrlen);
-
-        mpz_t *pubk = malloc(2*sizeof(mpz_t));
-        uint8_t buff[1024*128];
-        recv(sockfd, buff, 1024*128, 0);
-        cy_buff_rsa_key_imp(buff, &pubk);
-        gmp_printf("from server:\ne=%Zd\nn=%Zd\n", pubk[0], pubk[1]);
-        __uint128_t aesk;
-        cy_aes_key_gen(&aesk);
-        uint8_t buff2[1024*128];
-        cy_buff_msg_128_exp(aesk, buff2);
-        cy_buff_rsa_encryption(128, pubk, 1024*128, buff2);
-        send(sockfd, buff2, 1024*128, 0);
-        printf("generated in client: ");
-        print_u128_hex(aesk);
-    }
-
+    struct CY_HEADER hmida;
+    uint8_t buff[CY_BUFFSIZE];
+    memset(&hmida, 0, sizeof (hmida));
+    hmida.cy_data_len = 777;
+    cy_buff_header_exp(hmida, buff);
+    struct CY_HEADER hmida2;
+    cy_buff_header_imp(buff, &hmida2);
+    printf("%zu\n", hmida2.cy_data_len);
     return 0;
 }

@@ -871,135 +871,121 @@ void cy_aes_decryption(__uint128_t cy_msg, __uint128_t key, __uint128_t *msg)
 
 
 
-void cy_buff_padding_add(const size_t size, uint8_t *pad, uint8_t buffer[])
-{
-    *pad = 16 - size % 16;
-    for (size_t i = 0; i < *pad; i++) buffer[size + i] = *pad;
-}
+// void cy_buff_padd16(const size_t size, uint8_t *pad, uint8_t buffer[])
+// {
+//     *pad = 16 - size % 16;
+//     for (size_t i = 0; i < *pad; i++) buffer[size + i] = *pad;
+// }
 
-void cy_buff_size_exp(const size_t size, uint8_t buff[])
-{
-    for (size_t i = 0; i < sizeof(size_t); i++)
-        buff[sizeof(size_t) - (i + 1)] = (uint8_t)((size >> (i * 8)) & 0xFF);  
-}
+// void cy_buff_size_exp(const size_t size, uint8_t buff[])
+// {
+//     for (size_t i = 0; i < sizeof(size_t); i++)
+//         buff[sizeof(size_t) - (i + 1)] = (uint8_t)((size >> (i * 8)) & 0xFF);  
+// }
 
-void cy_buff_size_imp(const uint8_t buff[], size_t *size)
-{
-    *size = 0;
-    for (size_t i = 0; i < sizeof(size_t); i++) 
-        *size |= ((size_t) (buff[sizeof(size_t) - (i + 1)])) << (i * 8);
-}
+// void cy_buff_size_imp(const uint8_t buff[], size_t *size)
+// {
+//     *size = 0;
+//     for (size_t i = 0; i < sizeof(size_t); i++) 
+//         *size |= ((size_t) (buff[sizeof(size_t) - (i + 1)])) << (i * 8);
+// }
 
-void cy_buff_msg_128_exp(const __uint128_t msg, uint8_t buff[])
-{
-    for (__uint128_t i = 0; i < sizeof(__uint128_t); i++)
-        buff[sizeof(__uint128_t) - (i + 1)] = (uint8_t)((msg >> (i * 8)) & 0xFF);  
-}
+// void cy_buff_msg_128_exp(const __uint128_t msg, uint8_t buff[])
+// {
+//     for (__uint128_t i = 0; i < sizeof(__uint128_t); i++)
+//         buff[sizeof(__uint128_t) - (i + 1)] = (uint8_t)((msg >> (i * 8)) & 0xFF);  
+// }
 
-void cy_buff_msg_128_imp(const uint8_t buff[], __uint128_t *size)
-{
-    *size = 0;
-    for (__uint128_t i = 0; i < sizeof(__uint128_t); i++) 
-        *size |= ((__uint128_t) (buff[sizeof(__uint128_t) - (i + 1)])) << (i * 8); 
-}
+// void cy_buff_msg_128_imp(const uint8_t buff[], __uint128_t *size)
+// {
+//     *size = 0;
+//     for (__uint128_t i = 0; i < sizeof(__uint128_t); i++) 
+//         *size |= ((__uint128_t) (buff[sizeof(__uint128_t) - (i + 1)])) << (i * 8); 
+// }
 
-void cy_buff_header_exp(const size_t size, const CY_CYPHER_TYPE cy_type, const uint8_t pad, uint8_t buff[])
-{
-    cy_buff_size_exp(size, buff);
-    buff[8] = (uint8_t) cy_type;
-    buff[9] = pad;
-}
+// void cy_buff_rsa_key_exp(mpz_t *key, uint8_t buff[])
+// {
+//     size_t sizekey0 = 0, sizekey1 = 0;
+//     mpz_export(buff + 8, &sizekey0, 1, sizeof(buff[0]), 0, 0, key[0]);
+//     cy_buff_size_exp(sizekey0, buff);
+//     mpz_export(buff + sizekey0 + 16, &sizekey1, 1, sizeof(buff[0]), 0, 0, key[1]);
+//     cy_buff_size_exp(sizekey1, buff + 8 + sizekey0);
+// }
 
-void cy_buff_header_imp(const uint8_t buff[], size_t *size, CY_CYPHER_TYPE *cy_type, uint8_t *pad)
-{
-    cy_buff_size_imp(buff, size);
-    *cy_type = (CY_CYPHER_TYPE) buff[8];
-    *pad = buff[9];
-}
+// void cy_buff_rsa_key_imp(const uint8_t buff[], mpz_t **key)
+// {
+//     size_t sizekey0 = 0, sizekey1 = 0;
+//     cy_buff_size_imp(buff, &sizekey0);
+//     mpz_import((*key)[0], sizekey0, 1, sizeof(buff[0]), 0, 0, buff + 8);
+//     cy_buff_size_imp(buff + 8 + sizekey0, &sizekey1);
+//     mpz_import((*key)[1], sizekey1, 1, sizeof(buff[0]), 0, 0, buff + sizekey0 + 16);
+// }
 
-void cy_buff_rsa_key_exp(mpz_t *key, uint8_t buff[])
-{
-    size_t sizekey0 = 0, sizekey1 = 0;
-    mpz_export(buff + 8, &sizekey0, 1, sizeof(buff[0]), 0, 0, key[0]);
-    cy_buff_size_exp(sizekey0, buff);
-    mpz_export(buff + sizekey0 + 16, &sizekey1, 1, sizeof(buff[0]), 0, 0, key[1]);
-    cy_buff_size_exp(sizekey1, buff + 8 + sizekey0);
-}
+// void cy_buff_aes_key_exp(const __uint128_t key, uint8_t buff[])
+// {
+//     cy_buff_msg_128_exp(key, buff);
+// }
 
-void cy_buff_rsa_key_imp(const uint8_t buff[], mpz_t **key)
-{
-    size_t sizekey0 = 0, sizekey1 = 0;
-    cy_buff_size_imp(buff, &sizekey0);
-    mpz_import((*key)[0], sizekey0, 1, sizeof(buff[0]), 0, 0, buff + 8);
-    cy_buff_size_imp(buff + 8 + sizekey0, &sizekey1);
-    mpz_import((*key)[1], sizekey1, 1, sizeof(buff[0]), 0, 0, buff + sizekey0 + 16);
-}
+// void cy_buff_aes_key_imp(const uint8_t buff[], __uint128_t *key)
+// {
+//     cy_buff_msg_128_imp(buff, key);
+// }
 
-void cy_buff_aes_key_exp(const __uint128_t key, uint8_t buff[])
-{
-    cy_buff_msg_128_exp(key, buff);
-}
+// void cy_buff_rsa_encryption(const size_t size, const mpz_t *key, uint8_t buff[])
+// {
+//     size_t msgsize = 0, offset = 0;
+//     mpz_t cy_msg; mpz_init(cy_msg); uint8_t bufftmp[size];
+//     for (size_t i = 0; i < size; i++) bufftmp[i] = buff[i];
 
-void cy_buff_aes_key_imp(const uint8_t buff[], __uint128_t *key)
-{
-    cy_buff_msg_128_imp(buff, key);
-}
+//     for (size_t i = 0; i < size; i++)
+//     {
+//         cy_rsa_encryption(bufftmp[i], key, cy_msg);
+//         mpz_export(buff + 8 + offset, &msgsize, 1, 1, 1, 0, cy_msg);
+//         cy_buff_size_exp(msgsize, buff + offset);
+//         offset += 8 + msgsize;
+//     }
+//     mpz_clear(cy_msg);
+// }
 
-void cy_buff_rsa_encryption(const size_t size, const mpz_t *key, const size_t buffn, uint8_t buff[])
-{
-    size_t msgsize = 0, offset = 0;
-    mpz_t cy_msg; mpz_init(cy_msg); uint8_t bufftmp[buffn];
-    for (size_t i = 0; i < buffn; i++) bufftmp[i] = buff[i];
+// void cy_buff_rsa_decryption(const size_t size, const mpz_t *key, uint8_t buff[])
+// {
+//     size_t msgsize = 0, offset = 0;
+//     mpz_t cy_msg; mpz_init(cy_msg); uint8_t bufftmp[size];
+//     for (size_t i = 0; i < size; i++) bufftmp[i] = buff[i];
 
-    for (size_t i = 0; i < size; i++)
-    {
-        cy_rsa_encryption(bufftmp[i], key, cy_msg);
-        mpz_export(buff + 8 + offset, &msgsize, 1, 1, 1, 0, cy_msg);
-        cy_buff_size_exp(msgsize, buff + offset);
-        offset += 8 + msgsize;
-    }
-    mpz_clear(cy_msg);
-}
+//     for (size_t i = 0; i < size; i++)
+//     {
+//         cy_buff_size_imp(bufftmp + offset , &msgsize);
+//         mpz_import(cy_msg, msgsize, 1, 1, 1, 0, bufftmp + 8 + offset);
+//         cy_rsa_decryption(cy_msg, key, buff + i);
+//         offset += 8 + msgsize;
+//     }
+//     mpz_clear(cy_msg);
+// }
 
-void cy_buff_rsa_decryption(const size_t size, const mpz_t *key, const size_t buffn, uint8_t buff[])
-{
-    size_t msgsize = 0, offset = 0;
-    mpz_t cy_msg; mpz_init(cy_msg); uint8_t bufftmp[buffn];
-    for (size_t i = 0; i < buffn; i++) bufftmp[i] = buff[i];
+// void cy_buff_aes_encryption(const size_t size, const __uint128_t key, uint8_t buff[])
+// {
+//     __uint128_t msg, cy_msg;
+//     size_t sizen = size / 16;
+//     for (size_t i = 0; i < sizen; i++)
+//     {
+//         cy_buff_msg_128_imp(buff + i * 16, &msg);
+//         cy_aes_encryption(msg, key, &cy_msg);
+//         cy_buff_msg_128_exp(cy_msg, buff + i * 16);
+//     }
+// }
 
-    for (size_t i = 0; i < size; i++)
-    {
-        cy_buff_size_imp(bufftmp + offset , &msgsize);
-        mpz_import(cy_msg, msgsize, 1, 1, 1, 0, bufftmp + 8 + offset);
-        cy_rsa_decryption(cy_msg, key, buff + i);
-        offset += 8 + msgsize;
-    }
-    mpz_clear(cy_msg);
-}
-
-void cy_buff_aes_encryption(const size_t size, const __uint128_t key, uint8_t buff[])
-{
-    __uint128_t msg, cy_msg;
-    size_t sizen = size / 16;
-    for (size_t i = 0; i < sizen; i++)
-    {
-        cy_buff_msg_128_imp(buff + i * 16, &msg);
-        cy_aes_encryption(msg, key, &cy_msg);
-        cy_buff_msg_128_exp(cy_msg, buff + i * 16);
-    }
-}
-
-void cy_buff_aes_decryption(const size_t size, const __uint128_t key, uint8_t buff[])
-{
-    __uint128_t msg, cy_msg;
-    size_t sizen = size / 16;
-    for (size_t i = 0; i < sizen; i++)
-    {
-        cy_buff_msg_128_imp(buff + i * 16, &cy_msg);
-        cy_aes_decryption(cy_msg, key, &msg);
-        cy_buff_msg_128_exp(msg, buff + i * 16);
-    }
-}
+// void cy_buff_aes_decryption(const size_t size, const __uint128_t key, uint8_t buff[])
+// {
+//     __uint128_t msg, cy_msg;
+//     size_t sizen = size / 16;
+//     for (size_t i = 0; i < sizen; i++)
+//     {
+//         cy_buff_msg_128_imp(buff + i * 16, &cy_msg);
+//         cy_aes_decryption(cy_msg, key, &msg);
+//         cy_buff_msg_128_exp(msg, buff + i * 16);
+//     }
+// }
 
 // typedef struct DoubleNode
 // {
