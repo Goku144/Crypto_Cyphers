@@ -9,6 +9,7 @@
 #include <cypher.h>
 #include <unistd.h>
 #include <stdarg.h>
+#include <fcntl.h>
 
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -41,6 +42,8 @@ void cy_buff_header_imp(const uint8_t buff[], struct CY_HEADER *head);
 void cy_buff_size_exp(const size_t size, uint8_t buff[]);
 
 void cy_buff_size_imp(const uint8_t buff[], size_t *size);
+
+void serror(const char *fmt);
 
 
 void cy_buff_size_exp(const size_t size, uint8_t buff[])
@@ -75,7 +78,7 @@ void cy_buff_header_imp(const uint8_t buff[], struct CY_HEADER *head)
     head->cy_hash_flag = buff[14]; head->cy_hash_type = buff[15];
 }
 
-void cy_buff_send(int __fd, const struct CY_HEADER head, void *buff)
+void cy_buff_send(int __fd, const struct CY_HEADER head, uint8_t *buff)
 {
     uint8_t *p = buff;
     cy_buff_header_exp(head, p);
@@ -90,7 +93,7 @@ void cy_buff_send(int __fd, const struct CY_HEADER head, void *buff)
     }
 }
 
-void cy_buff_recv(int __fd, struct CY_HEADER *head, void *buff)
+void cy_buff_recv(int __fd, struct CY_HEADER *head, uint8_t *buff)
 {
     uint8_t *p = buff;
     size_t fullsize = 16;
@@ -109,37 +112,34 @@ void cy_buff_recv(int __fd, struct CY_HEADER *head, void *buff)
     }
 }
 
-void cy_buff_read(int __fd, struct CY_HEADER *head, void **buff)
+void cy_buff_read(int __fd, struct CY_HEADER *head, uint8_t **buff)
 {
     size_t buffsize = CY_BUFFSIZE;
     memset(head, 0, sizeof(*head));
-    uint8_t *p = malloc(CY_BUFFSIZE * sizeof(*p));
-    *buff = p;
-    if(!p) serror(__func__);
+    *buff = malloc(CY_BUFFSIZE * sizeof(**buff));
+    if(!*buff) serror(__func__);
     while (1)
     {
         if(buffsize - head->cy_data_len < CY_BUFFSIZE) 
         {
             buffsize += CY_BUFFSIZE;
-            p = realloc(*buff, buffsize * sizeof(*p));
-            *buff = p;
-            if(!p) serror(__func__);
+            *buff = realloc(*buff, buffsize * sizeof(*buff));
+            if(!*buff) serror(__func__);
         }
-        ssize_t n = read(__fd, p + head->cy_data_len, CY_BUFFSIZE);
+        ssize_t n = read(__fd, *buff + head->cy_data_len, CY_BUFFSIZE);
         if(n == 0) return;
         if(n < 0) serror(__func__);
         head->cy_data_len += n;
     }
 }
 
-void cy_buff_write(int __fd, const struct CY_HEADER head, void *buff)
+void cy_buff_write(int __fd, const struct CY_HEADER head, const uint8_t *buff)
 {
-    uint8_t *p = buff;
     size_t fullsize = head.cy_data_len;
     size_t total = 0;
     while (total < fullsize)
     {
-        ssize_t n = send(__fd, p + total, fullsize - total, 0);
+        ssize_t n = write(__fd, buff + total, fullsize - total);
         if(n == 0) serror("Peer closed before we send the full msg");
         if(n < 0) serror(__func__);
         total +=n;
@@ -163,12 +163,9 @@ void print_u128_hex(__uint128_t x) {
 int main(void)
 {
     struct CY_HEADER hmida;
-    uint8_t buff[CY_BUFFSIZE];
-    memset(&hmida, 0, sizeof (hmida));
-    hmida.cy_data_len = 777;
-    cy_buff_header_exp(hmida, buff);
-    struct CY_HEADER hmida2;
-    cy_buff_header_imp(buff, &hmida2);
-    printf("%zu\n", hmida2.cy_data_len);
+    uint8_t *buff;
+    int fd = open("hmi.txt", O_RDWR, 777);
+    cy_buff_read(fd, &hmida, &buff);
+    cy_buff_write(STDOUT_FILENO, hmida, buff);
     return 0;
 }

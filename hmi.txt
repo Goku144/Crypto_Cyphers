@@ -13,3 +13,4 @@ Tant que f est non vide faire
             ARB[si] <- sj
     COL[sj] <- N
 returner ARB
+wjhdgcdhqwosqowicdhqoxcha
